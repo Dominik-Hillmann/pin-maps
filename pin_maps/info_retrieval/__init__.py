@@ -1,0 +1,1 @@
+"""This modules resolves the queries to coordinates."""

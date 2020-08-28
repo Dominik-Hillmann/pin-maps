@@ -1,0 +1,6 @@
+*.pyc
+*.drawio
+__pycache__/
+.pytest_cache/
+.vscode/
+.ipynb_checkpoints

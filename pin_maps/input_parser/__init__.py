@@ -1,0 +1,1 @@
+"""This module is responsible of parsing the command line parameters."""
