@@ -10,18 +10,22 @@ class ParamsParser:
     def __init__(self):
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            '-q', 
-            '--query',
+            '-q', '--query',
             nargs = '+',
-            required = True, 
+            type = str,
             help = 'The city or region of which you want to create a map.'
         )
+        parser.add_argument(
+            '-a', '--latitude',
+            type = float,
+            help = 'The latitude of the pin.'
+        )
+        parser.add_argument(
+            '-o', '--longitude',
+            type = float,
+            help = 'The longitude of the pin.'
+        )
         self.parsed_args = vars(parser.parse_args())
-
-        with open('settings.json') as settings_file:
-            settings = json.load(settings_file)
-        key = settings['key']
-        self.parsed_args['key'] = key
         
    
     @property
