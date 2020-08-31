@@ -20,6 +20,7 @@ class ParamsParser:
 
         with open('settings.json') as settings_file:
             settings = json.load(settings_file)
+            
         key = settings['key']
         self.parsed_args['key'] = key
         
