@@ -4,6 +4,8 @@ from input_parser.ParamsParser import ParamsParser
 import os
 # External modules
 from PIL import Image
+from PIL import ImageFont
+from PIL import ImageDraw
 
 
 def create_output_dir() -> None:
@@ -11,7 +13,6 @@ def create_output_dir() -> None:
     if not 'output' in working_dir_content:
         os.mkdir(os.path.join(os.getcwd(), 'output'))
     
-
 
 def main() -> None:
     create_output_dir()
@@ -28,6 +29,13 @@ def main() -> None:
     img_new.paste(img, (0, 0))
     
     img_new.save(os.path.join(os.getcwd(), 'output', 'edited.png'))
+    
+    font = ImageFont.load_default().font
+    font2 = ImageFont.truetype('testfont.ttf', 30)
+
+    draw = ImageDraw.Draw(img_new)
+    draw.text((5, 5), u'Das ist ein Test!', 'green', font2)
+    img_new.save(os.path.join(os.getcwd(), 'output', 'written.png'))
 
 
 if __name__ == '__main__':
