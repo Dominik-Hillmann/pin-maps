@@ -32,9 +32,10 @@ def main() -> None:
     
     font = ImageFont.load_default().font
     font2 = ImageFont.truetype('testfont.ttf', 30)
+    playfair_font = ImageFont.truetype('playfair.ttf', 120)
 
     draw = ImageDraw.Draw(img_new)
-    draw.text((5, 5), u'Das ist ein Test!', 'green', font2)
+    draw.text((200, 5), u'Das ist ein Test!', 'black', playfair_font)
     img_new.save(os.path.join(os.getcwd(), 'output', 'written.png'))
 
 
