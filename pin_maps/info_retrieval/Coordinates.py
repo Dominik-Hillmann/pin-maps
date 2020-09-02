@@ -12,7 +12,7 @@ class Coordinates:
             self.latitude, self.longitude = coords
         else:
             raise Exception('Please provide either a location string or the coordinates.')
-
+        # When coordinates are resolved or read, check if they are inside the Germany box (top, left, right, bottom.)
     
     def _resolve(self, location: str) -> Tuple[float, float]:
         pass
