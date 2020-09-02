@@ -4,45 +4,31 @@ import json
 # Typing 
 from typing import Tuple
 
-class Coords:
-    def __init__(self, query: str):
-        pass
-        # gets coords, saves them
-
+class Coordinates:
+    def __init__(self, query: str = None, coords: Tuple[float, float] = None):
+        if query is not None:
+            self.latitude, self.longitude = self._resolve(query)
+        elif coords is not None:
+            self.latitude, self.longitude = coords
+        else:
+            raise Exception('Please provide either a location string or the coordinates.')
+        # When coordinates are resolved or read, check if they are inside the Germany box (top, left, right, bottom.)
     
-    @property
-    def lat(self):
+    def _resolve(self, location: str) -> Tuple[float, float]:
         pass
-        # get the latitude
-    
+        # Contact nominatem API and resolve city name to coordinates if possible.
+
 
     @property
-    def lon(self):
-        pass
-        # get the longitude
+    def lat(self) -> float:
+        return self.latitude 
 
 
+    @property
+    def lon(self) -> float:
+        return self.longitude
 
-# Python libraries
-import requests # pylint: disable=import-error
-import json
 
-class ShapeReceiver:
-    """Retrieves the shape of the region from Open Street Maps."""
-
-    to_json = '&format=json'
-
-    def __init__(self, region_name: str):
-        self._region_name = region_name.lower()
-
-        self._meta_info_link = f'https://nominatim.openstreetmap.org/search.php?q={self._region_name}&polygon_geojson=1'
- 
-
-    def get(self):
-        r = requests.get(self._meta_info_link + self.to_json)
-        try:
-            geo_json = json.loads(r.content)[0]['geojson']
-        except IndexError:
-            raise Exception(f'The region {self._region_name} was not found.')
-
-        return geo_json
+    @property
+    def coords(self) -> Tuple[float, float]:
+        return (self.latitude, self.longitude)
