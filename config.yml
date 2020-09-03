@@ -1,15 +1,15 @@
 fonts:
-        - playfair
-        - timesnewroman
+   - playfair
+   - timesnewroman
 backgrounds:
-        - clouds
-                x: 0
-                y: 0
-                zoom: 1.2
-        - abstract
-                x: 120
-                y: 0
-                zoom 0.95
+   - clouds
+      x: 0
+      y: 0
+      zoom: 1.2
+   - abstract
+      x: 120
+      y: 0
+      zoom: 0.95
 
 
 

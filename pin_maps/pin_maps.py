@@ -19,7 +19,7 @@ def main() -> None:
     img = Image.open(os.path.join('output', 'test.png'))
     print(img)
     print(img.size)
-    (left, right, top, bottom) = (417, 1640, 510, 2154)
+    (left, right, top, bottom) = (300, 1745, 650, 2580)
     img = img.crop((left, top, right, bottom))
     width_cropped, height_cropped = img.size
     print(width_cropped, height_cropped)
@@ -30,12 +30,16 @@ def main() -> None:
     
     img_new.save(os.path.join(os.getcwd(), 'output', 'edited.png'))
     
+    text = u'Das ist ein Test äöü!'
+
     font = ImageFont.load_default().font
-    font2 = ImageFont.truetype('testfont.ttf', 30)
+    anton_font = ImageFont.truetype('anton.ttf', 120)
+    print('Size Anton:', anton_font.getsize(text))
     playfair_font = ImageFont.truetype('playfair.ttf', 120)
+    print('playfair size:', playfair_font.getsize(text))
 
     draw = ImageDraw.Draw(img_new)
-    draw.text((200, 5), u'Das ist ein Test!', 'black', playfair_font)
+    draw.text((200, 1620), text, 'black', playfair_font)
     img_new.save(os.path.join(os.getcwd(), 'output', 'written.png'))
 
 
