@@ -96,7 +96,7 @@ def main() -> None:
     ### WRITING SECOND HEADER ###
     line_spacing = 30
 
-    t = 'Das ist ein sehr langer Text. ' * 5 
+    t = 'Fulda, 11. September 2001. Ich werde dich für immer lieben. Das soll ein langer Testtext sein.'
     hori_start = height_cropped + added_frame_px + font_height + line_spacing # Height of first heading
 
     font_below = ImageFont.truetype('prata-regular.ttf', 70)
