@@ -1,5 +1,6 @@
 # Internal modules
 from input_parser.ParamsParser import ParamsParser
+from info_retrieval.Coordinates import Coordinates
 # Python libraries
 import os
 from copy import deepcopy 
@@ -56,6 +57,14 @@ def pattern_2nd_text(
 
 
 def main() -> None:
+    params = ParamsParser()
+    if params.mode == ParamsParser.QUERY:
+        coords = Coordinates(query = params.query)
+    elif params.mode == params.COORDS:
+        coords = Coordinates(coords = params.coords)
+
+    print(coords.lat, coords.lon)
+
     height_text_space = 700
     text = u'Inge & Maik-Günter'
     added_frame_px = 150

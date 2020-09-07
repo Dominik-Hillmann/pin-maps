@@ -1,5 +1,5 @@
 # Python libraries
-import json
+# import yaml
 # External modules
 import argparse
 
@@ -10,13 +10,12 @@ class ParamsParser:
     QUERY = 'query'
     COORDS = 'coordinates'
 
-
     def __init__(self):
         parser = argparse.ArgumentParser()
         parser.add_argument(
             '-q', 
             '--query',
-            nargs = '+',
+            # nargs = '+', SPÄTER LISTE
             # required = True,
             type = str,
             help = 'The city or region of which you want to create a map.'
@@ -32,34 +31,38 @@ class ParamsParser:
             type = float
         )
         self.parsed_args = vars(parser.parse_args())
-        print(self.parsed_args)
+        # print(self.parsed_args)
         query_given = self.parsed_args['query'] is not None
         lat_given = self.parsed_args['latitude'] is not None
         lon_given = self.parsed_args['longitude']  is not None
-        print(query_given, lat_given, lon_given)
+        # print(query_given, lat_given, lon_given)
 
         if query_given and (lat_given or lon_given):
-            raise Exception('Please input EITHER a city name or coordinates, not both.') 
+            raise TypeError('Please input EITHER a city name or coordinates, not both.') 
 
         if not query_given and not lat_given and not lon_given:
-            raise Exception('Please input coordinates or a location name.')
+            raise TypeError('Please input coordinates or a location name.')
 
         if (lat_given and not lon_given) or (lon_given and not lat_given):
-            raise Exception('Please input both coordinates: --latitude or -a and --longitude or -o.')
+            raise TypeError('Please input both coordinates: --latitude or -a and --longitude or -o.')
 
         if query_given:
             self.parsed_args['mode'] = self.QUERY
         elif lat_given and lon_given:
             self.parsed_args['mode'] = self.COORDS
         else:
-            raise Exception('Unforeseen combination of console parameters.')
+            raise TypeError('Unforeseen combination of console parameters.')
 
 
-        with open('settings.json') as settings_file:
-            settings = json.load(settings_file)
+        # with open('config.yml') as config_file:
+        #     config = yaml.load(config_file)
             
-        key = settings['key']
-        self.parsed_args['key'] = key
+        # key = settings['key']
+        # self.parsed_args['key'] = key
+
+    @property
+    def coords(self):
+        return self.parsed_args['latitude'], self.parsed_args['longitude']
         
    
     @property
