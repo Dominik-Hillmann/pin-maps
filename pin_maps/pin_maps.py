@@ -65,7 +65,7 @@ def main() -> None:
 
     print(coords.lat, coords.lon)
 
-    height_text_space = 700
+    height_text_space = 750
     text = u'Inge & Maik-Günter'
     added_frame_px = 150
 
@@ -84,38 +84,44 @@ def main() -> None:
     ### WRITING FIRST HEADER ###
     img_new_width, img_new_height = img_new.size
     font_size = 500 # Arbitrary start value
-    anton_font = ImageFont.truetype('open-sans-bold.ttf', font_size)
-    font_width, font_height = anton_font.getsize(text) 
+    header_font_path = os.path.join('data', 'fonts', 'playfair-semibold.ttf')
+    header_font = ImageFont.truetype(header_font_path, font_size)
+    font_width, font_height = header_font.getsize(text) 
     
     print(f'Width: {font_width}, Size: {font_size}')
     while font_width > img_new_width:
         print(f'Width: {font_width}, Size: {font_size}')
         font_size -= 1
-        anton_font = ImageFont.truetype('open-sans-bold.ttf', font_size)
-        font_width, font_height = anton_font.getsize(text)
+        header_font = ImageFont.truetype(header_font_path, font_size)
+        font_width, font_height = header_font.getsize(text)
 
-    print('Size Anton:', anton_font.getsize(text))
+    # print('Size Anton:', header_font.getsize(text))
   
     # Add text below using the width of the frame that will be added later on.
     adjustment = 20 # Number of adjustment pixels to make text look better
     draw = ImageDraw.Draw(img_new)
-    draw.text((0, height_cropped + added_frame_px - adjustment), text, 'black', anton_font)
-    # draw.text((0, height_cropped), text, 'black', anton_font)
+    draw.text((0, height_cropped + added_frame_px - adjustment), text, 'black', header_font)
+    # draw.text((0, height_cropped), text, 'black', header_font)
 
     ### WRITING SECOND HEADER ###
     line_spacing = 30
 
-    t = 'Fulda, 11. September 2001. Ich werde dich für immer lieben. Das soll ein langer Testtext sein.'
+    t = 'Fulda, 11. September 2001. Ich werde dich für immer lieben. Für immer und immer und immer und immer und immer.'
     hori_start = height_cropped + added_frame_px + font_height + line_spacing # Height of first heading
 
-    font_below = ImageFont.truetype('prata-regular.ttf', 70)
+    font_below = ImageFont.truetype(os.path.join('data', 'fonts', 'robotoslab-regular.ttf'), 70)
     font_below_width, font_below_height = font_below.getsize(t)
     
     pattern = pattern_2nd_text(t, img_new_width, font_below)
     for vert_start, line in pattern:
         draw_pos = (vert_start, hori_start)
-        draw.text(draw_pos, line, 'black', font_below)
+        draw.text(draw_pos, line, (50, ) * 3, font_below)
         hori_start += font_below_height + line_spacing
+
+    ### LINIEN ALS RAHMEN ###
+    # line_height = hori_start - line_spacing
+    # line_below = [(0, line_height), (img_new_width, line_height)]
+    # draw.line(line_below, width = 20, fill = 'red')
 
 
     ### FRAMING ###
