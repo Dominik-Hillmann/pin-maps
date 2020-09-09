@@ -84,7 +84,7 @@ def main() -> None:
     ### WRITING FIRST HEADER ###
     img_new_width, img_new_height = img_new.size
     font_size = 500 # Arbitrary start value
-    header_font_path = os.path.join('data', 'fonts', 'playfair-semibold.ttf')
+    header_font_path = os.path.join('data', 'fonts', 'quattrocento.ttf')
     header_font = ImageFont.truetype(header_font_path, font_size)
     font_width, font_height = header_font.getsize(text) 
     
@@ -109,13 +109,13 @@ def main() -> None:
     t = 'Fulda, 11. September 2001. Ich werde dich für immer lieben. Für immer und immer und immer und immer und immer.'
     hori_start = height_cropped + added_frame_px + font_height + line_spacing # Height of first heading
 
-    font_below = ImageFont.truetype(os.path.join('data', 'fonts', 'robotoslab-regular.ttf'), 70)
+    font_below = ImageFont.truetype(os.path.join('data', 'fonts', 'quattrocento-sans.ttf'), 70)
     font_below_width, font_below_height = font_below.getsize(t)
     
     pattern = pattern_2nd_text(t, img_new_width, font_below)
     for vert_start, line in pattern:
         draw_pos = (vert_start, hori_start)
-        draw.text(draw_pos, line, (50, ) * 3, font_below)
+        draw.text(draw_pos, line, (0, ) * 3, font_below)
         hori_start += font_below_height + line_spacing
 
     ### LINIEN ALS RAHMEN ###
