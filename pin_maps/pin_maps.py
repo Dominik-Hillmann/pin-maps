@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+"""Create maps with pins and make them beautiful."""
+
 # Internal modules
 from input_parser.ParamsParser import ParamsParser
 from info_retrieval.Coordinates import Coordinates
@@ -30,11 +33,11 @@ def frame_img(img: Image, added_frame_px: int) -> Image:
 def pattern_2nd_text(
     text: str, 
     img_width: int, 
-    # start_height: int, 
     font: ImageFont, 
     font_size: int = 80, 
     line_dist: int = 10
 ) -> List[Tuple[int, str]]:
+
     lines = []
     starts = []
     text = text.split(' ')
