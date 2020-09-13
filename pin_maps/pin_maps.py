@@ -4,6 +4,7 @@
 # Internal modules
 from input_parser.ParamsParser import ParamsParser
 from info_retrieval.Coordinates import Coordinates
+from draw.Map import Map
 # Python libraries
 import os
 from copy import deepcopy 
@@ -17,7 +18,7 @@ from typing import List, Tuple
 
 def create_output_dir() -> None:
     working_dir_content = os.listdir(os.getcwd())
-    if not 'output' in working_dir_content:
+    if 'output' not in working_dir_content:
         os.mkdir(os.path.join(os.getcwd(), 'output'))
 
 
@@ -71,6 +72,12 @@ def main() -> None:
     height_text_space = 750
     text = u'Inge & Maik-Günter'
     added_frame_px = 150
+
+    germany = Map('de-neg.shp', 'space.png', [5.7, 15.25, 47.2, 56.2])
+    germany.add_pin('fulda-pin.png', (9.41, 50.33))
+    germany.add_pin('stuttgart-pin.png', (9.202620, 48.795474))
+    germany.save('test.png')
+
 
     ### DIR, CROPPING & ERWEITERUNG ###
     create_output_dir()

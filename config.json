@@ -1,0 +1,15 @@
+{
+    "countries": [
+        {
+            "name": "germany",
+            "shapefile": "de-neg.shp",
+            "shape-extent": [],
+            "background-extent": [],
+            "aspect-ratio": 1.2
+        }
+    ],
+    
+    "fonts": {
+        "crimson": "crimson.ttf"
+    }
+}
