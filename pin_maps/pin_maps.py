@@ -3,7 +3,7 @@
 
 # Internal modules
 from input_parser.ParamsParser import ParamsParser
-from info_retrieval.Coordinates import Coordinates
+# from info_retrieval.Coordinates import Coordinates
 from draw.Map import Map
 # Python libraries
 import os
@@ -38,6 +38,18 @@ def pattern_2nd_text(
     font_size: int = 80, 
     line_dist: int = 10
 ) -> List[Tuple[int, str]]:
+    """Creates the lines and their horizontal start position.
+
+    Args:
+        text (str): The text to be partiotined.
+        img_width (int): Image width.
+        font (ImageFont): The font with which the second text will be written.
+        font_size (int, optional): The size of this font. Defaults to 80.
+        line_dist (int, optional): The vertical distance in pixels between lines. Defaults to 10.
+
+    Returns:
+        List[Tuple[int, str]]: The list of the horizontal start positions and the lines.
+    """
 
     lines = []
     starts = []
@@ -61,28 +73,28 @@ def pattern_2nd_text(
 
 
 def main() -> None:
+    # PARAMS PARSING
     params = ParamsParser()
-    if params.mode == ParamsParser.QUERY:
-        coords = Coordinates(query = params.query)
-    elif params.mode == params.COORDS:
-        coords = Coordinates(coords = params.coords)
-
-    print(coords.lat, coords.lon)
+    # if params.mode == ParamsParser.QUERY:
+    #     coords = Coordinates(query = params.query)
+    # elif params.mode == params.COORDS:
+    #     coords = Coordinates(coords = params.coords)
 
     height_text_space = 750
     text = u'Inge & Maik-Günter'
     added_frame_px = 150
-
-    germany = Map('de-neg.shp', 'space.png', [5.7, 15.25, 47.2, 56.2])
+    # MAP CREATION AND PIN SETTING AND SAVING
+    germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
     germany.add_pin('fulda-pin.png', (9.41, 50.33))
     germany.add_pin('stuttgart-pin.png', (9.202620, 48.795474))
+    germany.add_pin('rostock-pin.png', (12.099246, 54.122477))
     germany.save('test.png')
 
 
-    ### DIR, CROPPING & ERWEITERUNG ###
+    ### LADEN, CROPPING & ERWEITERUNG ###
     create_output_dir()
     img = Image.open(os.path.join('output', 'test.png'))
-    (left, right, top, bottom) = (300, 1745, 650, 2580)
+    (left, right, top, bottom) = (300, 1760, 650, 2580) # 1745
     img = img.crop((left, top, right, bottom))
     width_cropped, height_cropped = img.size
 

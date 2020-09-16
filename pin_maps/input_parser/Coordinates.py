@@ -2,13 +2,21 @@
 import requests
 import json
 # Typing 
-from typing import Tuple
+from typing import Tuple, Union
 
 class Coordinates:
+    """Contains and automatically resolves locations to coordinates."""
 
     __base_query = 'https://nominatim.openstreetmap.org/search.php?q={}&format=json'
 
-    def __init__(self, query: str = None, coords: Tuple[float, float] = None):
+    def __init__(self, location: Union[str, Tuple[float, float]]):
+        if type(location) is str:
+            query, coords = location, None
+        elif type(location) is tuple:
+            query, coords = None, location
+        else:
+            raise Exception('Please provide either a location string or the coordinates as a tuple of floats.')
+
         if query is not None:
             self.__latitude, self.__longitude = self.__resolve(query)
         elif coords is not None:
@@ -16,6 +24,7 @@ class Coordinates:
         else:
             raise Exception('Please provide either a location string or the coordinates.')
         # When coordinates are resolved or read, check if they are inside the Germany box (top, left, right, bottom.)
+    
     
     def __resolve(self, query: str) -> Tuple[float, float]:
         url = self.__base_query.format(query.lower())
@@ -46,3 +55,7 @@ class Coordinates:
     @property
     def coords(self) -> Tuple[float, float]:
         return (self.__latitude, self.__longitude)
+
+
+    def __str__(self):
+        return f'(Latitude: {self.__latitude} | Longitude: {self.__longitude})'

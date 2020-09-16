@@ -8,7 +8,14 @@ import matplotlib.pyplot as plt
 from typing import List, Tuple
 
 class Map:
-    """Represents the map on which one can draw."""
+    """Represents the map on which one can draw.
+
+    Args:
+        shapefile_name (str): Name of the shapefile.
+        background_name (str): Name of the background file.
+        extent (List[float]): Extent of the map.
+        aspect_ratio (float, optional): Aspect ratio of the map. Defaults to 1.49.
+    """
 
     width = 2000
     height = 3000
@@ -20,7 +27,7 @@ class Map:
         shapefile_name: str,
         background_name: str, 
         extent: List[float],
-        aspect_ratio: float = 1.5
+        aspect_ratio: float = 1.49
     ):
         self.aspect_ratio = aspect_ratio
         self.fig = plt.figure(figsize = (self.width / self.dpi, self.height / self.dpi), dpi = self.dpi, frameon = False)
