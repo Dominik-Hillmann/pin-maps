@@ -80,6 +80,8 @@ def main() -> None:
     # elif params.mode == params.COORDS:
     #     coords = Coordinates(coords = params.coords)
 
+    exit('EXIT')
+
     height_text_space = 750
     text = u'Inge & Maik-Günter'
     added_frame_px = 150

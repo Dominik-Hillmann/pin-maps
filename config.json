@@ -21,5 +21,10 @@
 
     "wallpapers": {
         "space": "space.png"
+    },
+
+    "markers": {
+        "heraldry": "heraldry",
+        "white": "white-shade.png"
     }
 }

@@ -1,6 +1,7 @@
 # Python libraries
 import argparse
 import json
+import sys
 # Internal modules
 from input_parser.Coordinates import Coordinates
 
@@ -21,6 +22,11 @@ class ParamsParser:
     COORDS = 'coordinates'
 
     def __init__(self):
+        # Load configuration file.
+        with open('config.json', 'r') as config_file:
+            config = json.load(config_file)
+
+
         parser = argparse.ArgumentParser()
         parser.add_argument(
             '-c', '--country',
@@ -35,8 +41,7 @@ class ParamsParser:
             help = 'The background image of the country shape.'
         )
         parser.add_argument(
-            '-h', '--header',
-            required = True,
+            '-s', '--super',
             type = str,
             help = 'The header line.'
         )
@@ -53,6 +58,11 @@ class ParamsParser:
             'resolved to coordinates, if they can be found.'
         )
         parser.add_argument(
+            '-m', '--markers',
+            type = str,
+            help = 'The name of the image the locations will be marked with.'
+        )
+        parser.add_argument(
             '-f', '--fonts',
             nargs = 2,
             type = str,
@@ -60,14 +70,14 @@ class ParamsParser:
             'the second for the body.'
         )
         parser.add_argument(
-            '-a', '--latitude',
+            '-a', '--latitudes',
             nargs = '+',
             type = float,
             help = 'A list of the latitudes of the pins. The lists of ' + 
             'latitudes and longitudes need to have the same length.'
         )
         parser.add_argument(
-            '-o', '--longitude',
+            '-o', '--longitudes',
             nargs = '+',
             type = float,
             help = 'A list of the longitudes of the pins. The lists of ' + 
@@ -75,68 +85,47 @@ class ParamsParser:
         )
 
         self.parsed_args = vars(parser.parse_args())
-        # print(self.parsed_args)
-        query_given = self.parsed_args['query'] is not None
-        lat_given = self.parsed_args['latitude'] is not None
-        lon_given = self.parsed_args['longitude']  is not None
-        # print(query_given, lat_given, lon_given)
-
-        if query_given and (lat_given or lon_given):
-            raise TypeError('Please input EITHER a city name or coordinates, not both.') 
-
-        if not query_given and not lat_given and not lon_given:
-            raise TypeError('Please input coordinates or a location name.')
-
-        if (lat_given and not lon_given) or (lon_given and not lat_given):
-            raise TypeError('Please input both coordinates: --latitude or -a and --longitude or -o.')
-
-        if query_given:
-            self.parsed_args['mode'] = self.QUERY
-        elif lat_given and lon_given:
-            self.parsed_args['mode'] = self.COORDS
-        else:
-            raise TypeError('Unforeseen combination of console parameters.')
-
-
-        # with open('config.yml') as config_file:
-        #     config = yaml.load(config_file)
-            
-        # key = settings['key']
-        # self.parsed_args['key'] = key
-
-    @property
-    def coords(self):
-        return self.parsed_args['latitude'], self.parsed_args['longitude']
+        print(self.parsed_args)
+        print()
+        print(config)
+        # Checks pin positions.
+        if self.parsed_args['latitudes'] is not None and self.parsed_args['longitudes'] is not None:
+            if len(self.parsed_args['latitudes']) != len(self.parsed_args['longitudes']):
+                raise ValueError('Latitudes and longitudes need to have the same length.')
         
-   
-    @property
-    def query(self) -> str:
-        """The region or city that will be mapped.
-
-        Returns:
-            str: The query.
-        """
-
-        return self.parsed_args['query']
-
-
-    @property
-    def mode(self) -> str:
-        """Wether the user used location strings or coordinates as input.
-
-        Returns:
-            str: The mode.
-        """
-
-        return self.parsed_args['mode']
+        # Checks available countries, wallpapers and fonts.
+        possib_countries = [country['name'] for country in config['countries']]
+        country = self.parsed_args['country']
+        if country not in possib_countries:
+            raise ValueError(f'Selected country "{country}" not in the list of available countries: {", ".join(possib_countries)}.')
+        
+        possib_wallpapers = list(config['wallpapers'].keys())
+        wallpaper = self.parsed_args['wallpaper']
+        if wallpaper not in possib_wallpapers:
+            raise ValueError(f'Wallpaper "{wallpaper}" not available; available are: {", ".join(possib_wallpapers)}.')
+        
+        fonts = self.parsed_args['fonts']
+        possib_fonts = list(config['fonts'].keys())
+        if fonts is not None:
+            for font in fonts:
+                if font not in possib_fonts:
+                    raise ValueError(f'Font "{font}" not available; available are: {", ".join(possib_fonts)}')
 
 
-    @property
-    def key(self) -> str:
-        """The key used to communicate with the Google Maps API.
+        # Converting parameters and setting defaults.
+        # Wallpaper + extent
+        # country + extent
+        # fonts
+        # pin positions and pin markers
+        latitudes = self.parsed_args['latitudes']
+        longitudes = self.parsed_args['longitudes']
+        coord_pins = zip(latitudes, longitudes) if latitudes is not None else []
+        name_pins = self.parsed_args['towns']
+        self.__pins = []
+        for pin in coord_pins + name_pins:
+            try:
+                self.__pins.append(Coordinates(pin))
+            except ConnectionRefusedError as e:
+                print(e) # Information about which town name could not be resolved.
 
-        Returns:
-            str: The key.
-        """
-
-        return self.parsed_args['key']
+        

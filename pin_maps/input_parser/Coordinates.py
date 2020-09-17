@@ -1,6 +1,7 @@
 # Python libraries
 import requests
 import json
+from time import sleep
 # Typing 
 from typing import Tuple, Union
 
@@ -30,7 +31,7 @@ class Coordinates:
         url = self.__base_query.format(query.lower())
         reply = requests.get(url)
         if reply.status_code != 200:
-            raise ConnectionRefusedError(f'Status code {reply.status_code}: cannot contact nominatem.')
+            raise ConnectionRefusedError(f'Status code {reply.status_code}: cannot contact nominatem to resolve coordinates of "{query}".')
         
         try:
             result = json.loads(reply.content)[0]
@@ -39,6 +40,8 @@ class Coordinates:
 
         lat = result['lat']
         lon = result['lon']
+
+        sleep(1) # nominatem terms of service require this.
         return (lat, lon)
 
 
