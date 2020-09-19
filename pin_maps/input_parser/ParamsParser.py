@@ -24,7 +24,7 @@ class ParamsParser:
     def __init__(self):
         # Load configuration file.
         with open('config.json', 'r') as config_file:
-            config = json.load(config_file)
+            self.__config = json.load(config_file)
 
 
         parser = argparse.ArgumentParser()
@@ -84,28 +84,30 @@ class ParamsParser:
             'latitudes and longitudes need to have the same length.'
         )
 
-        self.parsed_args = vars(parser.parse_args())
-        print(self.parsed_args)
+        self.__parsed_args = vars(parser.parse_args())
+        print(self.__parsed_args)
         print()
-        print(config)
+        print(self.__config)
         # Checks pin positions.
-        if self.parsed_args['latitudes'] is not None and self.parsed_args['longitudes'] is not None:
-            if len(self.parsed_args['latitudes']) != len(self.parsed_args['longitudes']):
+        lats = self.__parsed_args['latitudes']
+        lons = self.__parsed_args['longitudes']
+        if lats is not None and lons is not None:
+            if len(lats) != len(lons):
                 raise ValueError('Latitudes and longitudes need to have the same length.')
         
         # Checks available countries, wallpapers and fonts.
-        possib_countries = [country['name'] for country in config['countries']]
-        country = self.parsed_args['country']
+        possib_countries = [country['name'] for country in self.__config['countries']]
+        country = self.__parsed_args['country']
         if country not in possib_countries:
             raise ValueError(f'Selected country "{country}" not in the list of available countries: {", ".join(possib_countries)}.')
         
-        possib_wallpapers = list(config['wallpapers'].keys())
-        wallpaper = self.parsed_args['wallpaper']
+        possib_wallpapers = list(self.__config['wallpapers'].keys())
+        wallpaper = self.__parsed_args['wallpaper']
         if wallpaper not in possib_wallpapers:
             raise ValueError(f'Wallpaper "{wallpaper}" not available; available are: {", ".join(possib_wallpapers)}.')
         
-        fonts = self.parsed_args['fonts']
-        possib_fonts = list(config['fonts'].keys())
+        fonts = self.__parsed_args['fonts']
+        possib_fonts = list(self.__config['fonts'].keys())
         if fonts is not None:
             for font in fonts:
                 if font not in possib_fonts:
@@ -117,15 +119,38 @@ class ParamsParser:
         # country + extent
         # fonts
         # pin positions and pin markers
-        latitudes = self.parsed_args['latitudes']
-        longitudes = self.parsed_args['longitudes']
+        latitudes = self.__parsed_args['latitudes']
+        longitudes = self.__parsed_args['longitudes']
         coord_pins = zip(latitudes, longitudes) if latitudes is not None else []
-        name_pins = self.parsed_args['towns']
+        name_pins = self.__parsed_args['towns']
         self.__pins = []
         for pin in coord_pins + name_pins:
             try:
                 self.__pins.append(Coordinates(pin))
             except ConnectionRefusedError as e:
                 print(e) # Information about which town name could not be resolved.
+    
 
+    @property
+    def wallpaper(self):
+        return self.__config['wallpapers'][self.__parsed_args['wallpaper']]
+
+    
+    @property
+    def head_font(self):
+        return self.__config['fonts'][self.__parsed_args['fonts'][0]]
+
+    
+    @property
+    def main_font(self):
+        return self.__config['fonts'][self.__parsed_args['fonts'][1]]
+
+    
+    @property
+    def country(self):
+        wanted_country = self.__config['countries']
+        for country_data in wanted_country:
+            if country_data['name'] == self.__parsed_args['country']:
+                return country_data
         
+        raise ValueError(f'Country "{wanted_country}" was not found.')
