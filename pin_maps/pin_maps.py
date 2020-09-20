@@ -14,6 +14,8 @@ from PIL import ImageDraw
 from PIL import ImageFont
 # Typing
 from typing import List, Tuple
+# Dev
+from pprint import pprint
 
 
 def create_output_dir() -> None:
@@ -38,7 +40,7 @@ def pattern_2nd_text(
     font_size: int = 80, 
     line_dist: int = 10
 ) -> List[Tuple[int, str]]:
-    """Creates the lines and their horizontal start position.
+    """Creates the text lines and their horizontal start position.
 
     Args:
         text (str): The text to be partiotined.
@@ -79,8 +81,11 @@ def main() -> None:
     #     coords = Coordinates(query = params.query)
     # elif params.mode == params.COORDS:
     #     coords = Coordinates(coords = params.coords)
+    print('Wallpaper ' + params.wallpaper)
+    print('Country')
+    pprint(params.country)
+    print('fonts: ' + params.head_font + ' ' + params.main_font)
 
-    exit('EXIT')
 
     height_text_space = 750
     text = u'Inge & Maik-Günter'
@@ -92,9 +97,28 @@ def main() -> None:
     germany.add_pin('rostock-pin.png', (12.099246, 54.122477))
     germany.save('test.png')
 
-
     ### LADEN, CROPPING & ERWEITERUNG ###
     create_output_dir()
+
+    def crop_add_text_space(
+        raw_img_name: str, 
+        cropping: Tuple[float],
+        added_text_height: int
+    ) -> str:
+        """Returns the name of the cropped image."""
+
+        img = Image.open(os.path.join('output', raw_img_name))
+        img = img.crop(cropping)
+        width_cropped, height_cropped = img.size
+        
+        dims_with_text = (width_cropped, height_cropped + added_text_height)
+        img_text = Image.new(img.mode, (255, ) * 3)
+        img_text.paste(img, (0, 0))
+        
+        name_splitted = raw_img_name.split('.')
+        name, extension = '.'.join(name_splitted[:-1]), name_splitted[-1]
+        img_text.save(os.path.joing(os.getcwd(), 'output', name + '-edited.' + extension))
+
     img = Image.open(os.path.join('output', 'test.png'))
     (left, right, top, bottom) = (300, 1760, 650, 2580) # 1745
     img = img.crop((left, top, right, bottom))

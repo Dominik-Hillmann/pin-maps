@@ -18,8 +18,8 @@ from input_parser.Coordinates import Coordinates
 class ParamsParser:
     """Class that makes it easy to retrieve parsed parameters."""
 
-    QUERY = 'query'
-    COORDS = 'coordinates'
+    __standard_head_font = 'crimson.ttf'
+    __standard_main_font = 'crimson.ttf'
 
     def __init__(self):
         # Load configuration file.
@@ -122,7 +122,8 @@ class ParamsParser:
         latitudes = self.__parsed_args['latitudes']
         longitudes = self.__parsed_args['longitudes']
         coord_pins = zip(latitudes, longitudes) if latitudes is not None else []
-        name_pins = self.__parsed_args['towns']
+        name_pins = self.__parsed_args['towns'] if self.__parsed_args['towns'] is not None else []
+        print('name pins' + str(name_pins))
         self.__pins = []
         for pin in coord_pins + name_pins:
             try:
@@ -132,24 +133,41 @@ class ParamsParser:
     
 
     @property
-    def wallpaper(self):
+    def wallpaper(self) -> str:
         return self.__config['wallpapers'][self.__parsed_args['wallpaper']]
 
     
+    @poperty
+    def main_text(self) -> Union[str, None]:
+        return self.__parsed_args['body']
+
+
     @property
-    def head_font(self):
-        return self.__config['fonts'][self.__parsed_args['fonts'][0]]
+    def head_text(self) -> Union[str, None]:
+        return self.__parsed_args['super']
 
     
     @property
-    def main_font(self):
-        return self.__config['fonts'][self.__parsed_args['fonts'][1]]
+    def head_font(self) -> str:
+        try:
+            font = self.__config['fonts'][self.__parsed_args['fonts'][0]]
+            return font
+        except TypeError:
+            return self.__standard_head_font
 
     
     @property
-    def country(self):
-        wanted_country = self.__config['countries']
-        for country_data in wanted_country:
+    def main_font(self) -> str:
+        try:
+            font = self.__config['fonts'][self.__parsed_args['fonts'][1]]
+        except TypeError:
+            return self.__standard_main_font
+
+    
+    @property
+    def country(self) -> str:
+        possib_countries = self.__config['countries']
+        for country_data in possib_countries:
             if country_data['name'] == self.__parsed_args['country']:
                 return country_data
         
