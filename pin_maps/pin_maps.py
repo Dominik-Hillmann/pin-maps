@@ -7,7 +7,8 @@ from input_parser.ParamsParser import ParamsParser
 from draw.Map import Map
 # Python libraries
 import os
-from copy import deepcopy 
+from copy import deepcopy
+from time import time
 # External modules
 from PIL import Image
 from PIL import ImageDraw
@@ -18,19 +19,104 @@ from typing import List, Tuple
 from pprint import pprint
 
 
+def main() -> None:
+    params = ParamsParser()
+    create_output_dir()
+    print('Wallpaper ' + params.wallpaper_path)
+    print('Country')
+    pprint(params.country)
+    print('fonts: ' + str(params.head_font_path) + ' ' + str(params.main_font_path))
+
+    height_text_space = 750
+    text = u'Inge & Maik-Günter'
+    added_frame_px = 150
+    germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
+    germany.add_pin('fulda-pin.png', (9.41, 50.33))
+    germany.add_pin('stuttgart-pin.png', (9.202620, 48.795474))
+    germany.add_pin('rostock-pin.png', (12.099246, 54.122477))
+
+    raw_img_name = f'raw-{round(time())}.png'
+    germany.save(raw_img_name)
+
+    cropping = (300, 650, 1760, 2580) # (left, top, right, bottom)
+    img_new, (width_cropped, height_cropped) = crop_add_text_space(raw_img_name, cropping, height_text_space)
+    draw, font_height = write_header(img_new, params.head_font_path, text, height_cropped, added_frame_px)
+    
+    t = 'Fulda, 11. September 2001. Ich werde dich für immer lieben. Für immer und immer und immer und immer und immer.'
+    img_new = write_main_text(
+        img_new,
+        t,
+        params.main_font_path, 
+        70,
+        height_cropped,
+        added_frame_px,
+        font_height
+    )
+
+    framed_img = frame_img(img_new, added_frame_px)
+    framed_img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
+
+
 def create_output_dir() -> None:
+    """Creates the output directory, if there is none."""
+
     working_dir_content = os.listdir(os.getcwd())
     if 'output' not in working_dir_content:
         os.mkdir(os.path.join(os.getcwd(), 'output'))
 
 
-def frame_img(img: Image, added_frame_px: int) -> Image:
-    width, height = img.size
-    frame_dims = (width + added_frame_px * 2, height + added_frame_px * 2)
-    framed_img = Image.new(img.mode, frame_dims, (255, ) * 3)
-    framed_img.paste(img, (added_frame_px, ) * 2)
+def crop_add_text_space(
+    raw_img_name: str,
+    cropping: Tuple[float, float, float, float],
+    added_text_height: int
+) -> (Image, Tuple[int, int]):
+    """Crops the cartopy output and adds space to write text into below.
 
-    return framed_img
+    Args:
+        raw_img_name (str): The name if the image file with the map in the output directory.
+        cropping (Tuple[float, float, float, float]): Pixels from which map will be cropped (left, top, right, bottom).
+        added_text_height (int): The height of the area below into which text will be written.
+
+    Returns:
+        (Image, Tuple[int, int]): The changed image and the size of the cropped map.
+    """
+
+    img = Image.open(os.path.join('output', raw_img_name))
+    img = img.crop(cropping)
+    width_cropped, height_cropped = img.size
+    
+    dims_with_text = (width_cropped, height_cropped + added_text_height)
+    img_text = Image.new(img.mode, dims_with_text, color = (255, ) * 3)
+    img_text.paste(img, (0, 0))
+
+    return img_text, (width_cropped, height_cropped)
+
+
+def write_header(
+    img: Image, 
+    font_path: str, 
+    text: str, 
+    height_cropped: int, 
+    frame_width: int, 
+    adjustment: int = 20
+) -> (ImageDraw.Draw, int):
+
+    img_width, img_height = img.size
+    font_size = 500 # Arbitrary but high start value
+    font = ImageFont.truetype(font_path, font_size)
+    font_width, font_height = font.getsize(text) 
+
+    print(f'Width: {font_width}, Size: {font_size}')
+    while font_width > img_width:
+        print(f'Width: {font_width}, Size: {font_size}')
+        font_size -= 1
+        font = ImageFont.truetype(font_path, font_size)
+        font_width, font_height = font.getsize(text)
+    
+    draw = ImageDraw.Draw(img)
+    draw.text((0, height_cropped + added_frame_px - adjustment), text, 'black', font)
+
+    return draw, font_height
 
 
 def pattern_2nd_text(
@@ -74,114 +160,66 @@ def pattern_2nd_text(
     return list(zip(starts, lines))
 
 
-def main() -> None:
-    # PARAMS PARSING
-    params = ParamsParser()
-    # if params.mode == ParamsParser.QUERY:
-    #     coords = Coordinates(query = params.query)
-    # elif params.mode == params.COORDS:
-    #     coords = Coordinates(coords = params.coords)
-    print('Wallpaper ' + params.wallpaper)
-    print('Country')
-    pprint(params.country)
-    print('fonts: ' + params.head_font + ' ' + params.main_font)
+def write_main_text(
+    img: Image,
+    text: str, 
+    font_path: str, 
+    font_size: int,
+    height_cropped: int,
+    added_frame_px: int,
+    font_height: int,
+    line_spacing: int = 30
+) -> Image:
+    """Writes the main text into the free area.
 
+    Args:
+        img (Image): The image on which will be written.
+        text (str): The text that will be written
+        font_path (str): Path to the font used.
+        font_size (int): The font size.
+        height_cropped (int): Height of the cropped out map.
+        added_frame_px (int): The width of the future frame.
+        font_height (int): The height of the font of the heading.
+        line_spacing (int, optional): Number of pixels in spacing between lines. Defaults to 30.
 
-    height_text_space = 750
-    text = u'Inge & Maik-Günter'
-    added_frame_px = 150
-    # MAP CREATION AND PIN SETTING AND SAVING
-    germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
-    germany.add_pin('fulda-pin.png', (9.41, 50.33))
-    germany.add_pin('stuttgart-pin.png', (9.202620, 48.795474))
-    germany.add_pin('rostock-pin.png', (12.099246, 54.122477))
-    germany.save('test.png')
+    Returns:
+        Image: The image with text.
+    """
 
-    ### LADEN, CROPPING & ERWEITERUNG ###
-    create_output_dir()
+    img_width, img_height = img.size
+    draw = ImageDraw.Draw(img)
 
-    def crop_add_text_space(
-        raw_img_name: str, 
-        cropping: Tuple[float],
-        added_text_height: int
-    ) -> str:
-        """Returns the name of the cropped image."""
-
-        img = Image.open(os.path.join('output', raw_img_name))
-        img = img.crop(cropping)
-        width_cropped, height_cropped = img.size
-        
-        dims_with_text = (width_cropped, height_cropped + added_text_height)
-        img_text = Image.new(img.mode, (255, ) * 3)
-        img_text.paste(img, (0, 0))
-        
-        name_splitted = raw_img_name.split('.')
-        name, extension = '.'.join(name_splitted[:-1]), name_splitted[-1]
-        img_text.save(os.path.joing(os.getcwd(), 'output', name + '-edited.' + extension))
-
-    img = Image.open(os.path.join('output', 'test.png'))
-    (left, right, top, bottom) = (300, 1760, 650, 2580) # 1745
-    img = img.crop((left, top, right, bottom))
-    width_cropped, height_cropped = img.size
-
-    dims_new = (width_cropped, height_cropped + height_text_space)
-    img_new = Image.new(img.mode, dims_new, (255, ) * 3)
-    img_new.paste(img, (0, 0))
-    img_new.save(os.path.join(os.getcwd(), 'output', 'edited.png'))
-    
-    ### WRITING FIRST HEADER ###
-    img_new_width, img_new_height = img_new.size
-    font_size = 500 # Arbitrary start value
-    header_font_path = os.path.join('data', 'fonts', 'grandhotel.ttf')
-    header_font = ImageFont.truetype(header_font_path, font_size)
-    font_width, font_height = header_font.getsize(text) 
-    
-    print(f'Width: {font_width}, Size: {font_size}')
-    while font_width > img_new_width:
-        print(f'Width: {font_width}, Size: {font_size}')
-        font_size -= 1
-        header_font = ImageFont.truetype(header_font_path, font_size)
-        font_width, font_height = header_font.getsize(text)
-
-    # print('Size Anton:', header_font.getsize(text))
-  
-    # Add text below using the width of the frame that will be added later on.
-    adjustment = 20 # Number of adjustment pixels to make text look better
-    draw = ImageDraw.Draw(img_new)
-    draw.text((0, height_cropped + added_frame_px - adjustment), text, 'black', header_font)
-    # draw.text((0, height_cropped), text, 'black', header_font)
-
-    ### WRITING SECOND HEADER ###
-    line_spacing = 30
-
-    t = 'Fulda, 11. September 2001. Ich werde dich für immer lieben. Für immer und immer und immer und immer und immer.'
     hori_start = height_cropped + added_frame_px + font_height + line_spacing # Height of first heading
-
-    font_below = ImageFont.truetype(os.path.join('data', 'fonts', 'josefin-sans-regular.ttf'), 70)
-    font_below_width, font_below_height = font_below.getsize(t)
+    font = ImageFont.truetype(font_path, font_size)
+    font_width, font_height = font.getsize(text)
     
-    pattern = pattern_2nd_text(t, img_new_width, font_below)
+    pattern = pattern_2nd_text(text, img_width, font)
     for vert_start, line in pattern:
         draw_pos = (vert_start, hori_start)
-        draw.text(draw_pos, line, (0, ) * 3, font_below)
-        hori_start += font_below_height + line_spacing
-
-    ### LINIEN ALS RAHMEN ###
-    # line_height = hori_start - line_spacing
-    # line_below = [(0, line_height), (img_new_width, line_height)]
-    # draw.line(line_below, width = 20, fill = 'red')
-
-
-    ### FRAMING ###
-    framed_img = frame_img(img_new, added_frame_px)
-    framed_img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
+        draw.text(draw_pos, line, (0, ) * 3, font)
+        hori_start += font_height + line_spacing
     
-    # Eigentliche Schritte zum richtigen Einrichten der Bildunterschrift
-    # Ermittle Hauptzeile, packe ganz oben hin, einzeilig, gemacht
-    # Danach Zweitsatz solange aufteilen, bis auf fester Größe in den Rahmen
-    # Platziere die Zeilen so, dass Rand unten und zur Hauptzeile gleich groß
+    return img
 
-    # img_new.save(os.path.join(os.getcwd(), 'output', 'written.png'))
+
+def frame_img(img: Image, added_frame_px: int) -> Image:
+    """Puts a uniform frame around the image.
+
+    Args:
+        img (Image): The image around which the frame will be put.
+        added_frame_px (int): Width of the frame.
+
+    Returns:
+        Image: [description]
+    """
+
+    width, height = img.size
+    frame_dims = (width + added_frame_px * 2, height + added_frame_px * 2)
+    framed_img = Image.new(img.mode, frame_dims, (255, ) * 3)
+    framed_img.paste(img, (added_frame_px, ) * 2)
+
+    return framed_img
+
 
 if __name__ == '__main__':
     main()

@@ -4,6 +4,7 @@ import os
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import matplotlib.pyplot as plt
+from PIL import Image
 # Typing
 from typing import List, Tuple
 
@@ -58,6 +59,12 @@ class Map:
         lat, lon = coords
         pin_extent = (lat, lat + 0.6, lon, lon + 0.5)
         self.ax.imshow(pin, origin = 'upper', extent = pin_extent, transform = self.projection, zorder = 11)
+
+    
+    def to_PIL(self) -> Image:
+        """tbi"""
+
+        raise NotImplementedError
 
 
     def save(self, file_name: str) -> None:

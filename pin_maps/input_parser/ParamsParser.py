@@ -1,9 +1,13 @@
 # Python libraries
 import argparse
 import json
-import sys
+import os
 # Internal modules
 from input_parser.Coordinates import Coordinates
+# External modules
+from PIL import ImageFont
+# Typing
+from typing import Union, List
 
 # NOTE Needed information
 # Country name => shapefile name
@@ -18,8 +22,8 @@ from input_parser.Coordinates import Coordinates
 class ParamsParser:
     """Class that makes it easy to retrieve parsed parameters."""
 
-    __standard_head_font = 'crimson.ttf'
-    __standard_main_font = 'crimson.ttf'
+    __standard_head_font = os.path.join('data', 'fonts', 'grandhotel.ttf')
+    __standard_main_font = os.path.join('data', 'fonts', 'josefin-sans-regular.ttf')
 
     def __init__(self):
         # Load configuration file.
@@ -114,11 +118,6 @@ class ParamsParser:
                     raise ValueError(f'Font "{font}" not available; available are: {", ".join(possib_fonts)}')
 
 
-        # Converting parameters and setting defaults.
-        # Wallpaper + extent
-        # country + extent
-        # fonts
-        # pin positions and pin markers
         latitudes = self.__parsed_args['latitudes']
         longitudes = self.__parsed_args['longitudes']
         coord_pins = zip(latitudes, longitudes) if latitudes is not None else []
@@ -133,11 +132,16 @@ class ParamsParser:
     
 
     @property
-    def wallpaper(self) -> str:
-        return self.__config['wallpapers'][self.__parsed_args['wallpaper']]
+    def pins(self) -> Union[List[Coordinates], None]:
+        return self.__pins
+
+
+    @property
+    def wallpaper_path(self) -> str:
+        return os.path.join('data', 'img', self.__config['wallpapers'][self.__parsed_args['wallpaper']])
 
     
-    @poperty
+    @property
     def main_text(self) -> Union[str, None]:
         return self.__parsed_args['body']
 
@@ -148,18 +152,19 @@ class ParamsParser:
 
     
     @property
-    def head_font(self) -> str:
+    def head_font_path(self) -> str:
         try:
-            font = self.__config['fonts'][self.__parsed_args['fonts'][0]]
-            return font
+            font_name = self.__config['fonts'][self.__parsed_args['fonts'][0]]
+            return os.path.join('data', 'fonts', font_name)
         except TypeError:
             return self.__standard_head_font
 
     
     @property
-    def main_font(self) -> str:
+    def main_font_path(self) -> str:
         try:
-            font = self.__config['fonts'][self.__parsed_args['fonts'][1]]
+            font_name = self.__config['fonts'][self.__parsed_args['fonts'][1]]
+            return os.path.join('data', 'fonts', font_name)
         except TypeError:
             return self.__standard_main_font
 
