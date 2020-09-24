@@ -35,13 +35,16 @@ class Map:
         self.ax = plt.axes(projection = self.projection)
         self.ax.set_extent(extent, self.projection)
         
-        shape_path = os.path.join('data', 'shapefiles', shapefile_name)
-        shape = list(shpreader.Reader(shape_path).geometries())
-        self.ax.add_geometries(shape, self.projection, edgecolor = 'white', facecolor = 'white', zorder = 10)
+        # shape_path = os.path.join('data', 'shapefiles', shapefile_name)
+        # shape = list(shpreader.Reader(shape_path).geometries())
+        # self.ax.add_geometries(shape, self.projection, edgecolor = 'white', facecolor = 'white', zorder = 10)
 
         background_path = os.path.join('data', 'img', background_name)
         background = plt.imread(background_path)
-        background_extent = (5.5, 15.3, 47.0, 55.5) # (west, east, south, north)
+        # background_extent = (5.5, 15.3, 47.0, 55.5) # (west, east, south, north)
+
+        background_extent = (5.82, 15.12, 47.19, 55.31) # (west, east, south, north)
+
         self.ax.imshow(background, origin = 'upper', extent = background_extent)
 
 

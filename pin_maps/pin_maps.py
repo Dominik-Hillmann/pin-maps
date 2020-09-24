@@ -22,15 +22,18 @@ from pprint import pprint
 def main() -> None:
     params = ParamsParser()
     create_output_dir()
-    print('Wallpaper ' + params.wallpaper_path)
     print('Country')
     pprint(params.country)
-    print('fonts: ' + str(params.head_font_path) + ' ' + str(params.main_font_path))
+    print()
+
+    print('Wallpaper: ' + str(params.wallpaper))
 
     height_text_space = 750
     text = u'Inge & Maik-Günter'
     added_frame_px = 150
-    germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
+    # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
+    germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
+    
     germany.add_pin('fulda-pin.png', (9.41, 50.33))
     germany.add_pin('stuttgart-pin.png', (9.202620, 48.795474))
     germany.add_pin('rostock-pin.png', (12.099246, 54.122477))
@@ -58,7 +61,7 @@ def main() -> None:
 
 
 def create_output_dir() -> None:
-    """Creates the output directory, if there is none."""
+    """Creates a new output directory, if there is none."""
 
     working_dir_content = os.listdir(os.getcwd())
     if 'output' not in working_dir_content:
@@ -98,6 +101,7 @@ def write_header(
     text: str, 
     height_cropped: int, 
     frame_width: int, 
+    # added_frame_px: int,
     adjustment: int = 20
 ) -> (ImageDraw.Draw, int):
 
@@ -114,7 +118,8 @@ def write_header(
         font_width, font_height = font.getsize(text)
     
     draw = ImageDraw.Draw(img)
-    draw.text((0, height_cropped + added_frame_px - adjustment), text, 'black', font)
+    # draw.text((0, height_cropped + added_frame_px - adjustment), text, 'black', font)
+    draw.text((0, height_cropped + frame_width - adjustment), text, 'black', font)
 
     return draw, font_height
 

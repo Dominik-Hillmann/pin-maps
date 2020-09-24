@@ -2,12 +2,13 @@
 import argparse
 import json
 import os
+from copy import deepcopy
 # Internal modules
 from input_parser.Coordinates import Coordinates
 # External modules
 from PIL import ImageFont
 # Typing
-from typing import Union, List
+from typing import Union, List, Tuple
 
 # NOTE Needed information
 # Country name => shapefile name
@@ -100,12 +101,15 @@ class ParamsParser:
                 raise ValueError('Latitudes and longitudes need to have the same length.')
         
         # Checks available countries, wallpapers and fonts.
-        possib_countries = [country['name'] for country in self.__config['countries']]
+        possib_countries = list(self.__config['countries'].keys())
         country = self.__parsed_args['country']
         if country not in possib_countries:
-            raise ValueError(f'Selected country "{country}" not in the list of available countries: {", ".join(possib_countries)}.')
+            raise ValueError(
+                f'Selected country "{country}" not in the list of available countries: ' + 
+                f'{", ".join(possib_countries)} are possible.'
+            )
         
-        possib_wallpapers = list(self.__config['wallpapers'].keys())
+        possib_wallpapers = list(self.__config['countries'][country]['wallpapers'].keys())
         wallpaper = self.__parsed_args['wallpaper']
         if wallpaper not in possib_wallpapers:
             raise ValueError(f'Wallpaper "{wallpaper}" not available; available are: {", ".join(possib_wallpapers)}.')
@@ -131,14 +135,28 @@ class ParamsParser:
                 print(e) # Information about which town name could not be resolved.
     
 
+
     @property
     def pins(self) -> Union[List[Coordinates], None]:
         return self.__pins
 
 
     @property
-    def wallpaper_path(self) -> str:
-        return os.path.join('data', 'img', self.__config['wallpapers'][self.__parsed_args['wallpaper']])
+    def wallpaper(self) -> Tuple[str, bool, Tuple[float, float, float, float]]:
+        """Get the file path, whether a shape is need and the extent of the chosen wallpaper.
+
+        Returns:
+            Tuple[str, bool, Tuple[float, float, float, float]]: File path, need for shaping and the extent (west, east, south, north).
+        """
+
+        wallpaper_name = self.__parsed_args['wallpaper']
+        chosen_country = self.__parsed_args['country']
+        wallpaper_data = self.__config['countries'][chosen_country]['wallpapers'][wallpaper_name] 
+        file_path = os.path.join('data', 'img', wallpaper_data['filename'])
+        shaping_need = wallpaper_data['shaped']
+        extent = wallpaper_data['extent']
+        
+        return file_path, shaping_need, extent 
 
     
     @property
@@ -172,8 +190,7 @@ class ParamsParser:
     @property
     def country(self) -> str:
         possib_countries = self.__config['countries']
-        for country_data in possib_countries:
-            if country_data['name'] == self.__parsed_args['country']:
-                return country_data
+        country_data = deepcopy(possib_countries[self.__parsed_args['country']])
+        del country_data['wallpapers']
         
-        raise ValueError(f'Country "{wanted_country}" was not found.')
+        return country_data
