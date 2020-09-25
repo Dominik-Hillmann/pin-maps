@@ -227,4 +227,11 @@ def frame_img(img: Image, added_frame_px: int) -> Image:
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    from draw.Pin import Pin
+
+    pin_symbol_path = os.path.join('data', 'img', 'pin-google.png')
+    pin = Pin('Magdeburg', pin_symbol_path)
+    pin = Pin('Hamburg', pin_symbol_path)
+    Pin('Wanzleben-Börde', pin_symbol_path)
+    

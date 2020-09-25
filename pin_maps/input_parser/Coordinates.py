@@ -62,3 +62,8 @@ class Coordinates:
 
     def __str__(self):
         return f'(Latitude: {self.__latitude} | Longitude: {self.__longitude})'
+
+    
+    def __iter__(self):
+        for coord in [self.__latitude, self.__longitude]:
+            yield coord
