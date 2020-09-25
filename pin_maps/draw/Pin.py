@@ -68,13 +68,13 @@ class Pin:
         img_data = io.BytesIO(img_reply.content)
         heraldry = Image.open(img_data)
         heraldry = self.__flood_delete_background(heraldry)
+        heraldry = self.__add_shadow(heraldry)
         heraldry.save(os.path.join(self.__pin_cache_path, location_name.lower() + '-pin.png')) # Caching
 
         return heraldry
 
 
-    def __get_heraldry_cached(self, location_name: str) -> Image.Image:
-        
+    def __get_heraldry_cached(self, location_name: str) -> Image.Image:        
         cached_pins = os.listdir(self.__pin_cache_path)
         filename = f'{location_name.lower()}.png'
         if filename not in cached_pins:
@@ -99,8 +99,20 @@ class Pin:
 
     
     @staticmethod
-    def __add_shadow(heraldry: Image.Image) -> Image.Image:
-        pass
+    def __add_shadow(heraldry: Image.Image, height_change: float = 1.1, ell_start: float = 0.9) -> Image.Image:
+        heraldry.convert('RGBA')
+        orig_width, orig_height = heraldry.size
+
+        new_height = int(height_change * orig_height)
+        ell_img = Image.new('RGBA', (orig_width, new_height))
+        draw = ImageDraw.Draw(ell_img)
+
+        top_left = (0, int(ell_start * orig_height))
+        bot_right = (orig_width - 1, new_height - 1)
+        draw.ellipse((*top_left, *bot_right), fill = (0, 0, 0, 100))
+        ell_img.paste(heraldry, (0, 0), heraldry)
+
+        return ell_img
 
 
     def __str__(self):
