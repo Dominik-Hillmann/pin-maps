@@ -5,6 +5,7 @@
 from input_parser.ParamsParser import ParamsParser
 # from info_retrieval.Coordinates import Coordinates
 from draw.Map import Map
+from draw.Pin import Pin
 # Python libraries
 import os
 from copy import deepcopy
@@ -34,9 +35,33 @@ def main() -> None:
     # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
     germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
     
-    germany.add_pin('fulda-pin.png', (9.41, 50.33))
-    germany.add_pin('stuttgart-pin.png', (9.202620, 48.795474))
-    germany.add_pin('rostock-pin.png', (12.099246, 54.122477))
+    # germany.add_pin('fulda-pin.png', (9.41, 50.33))
+    # germany.add_pin('stuttgart-pin.png', (9.202620, 48.795474))
+    # germany.add_pin_old('rostock-pin.png', (12.099246, 54.122477))
+    mode = 'heraldry'
+    germany.add_pin(Pin('Berlin', mode))
+    germany.add_pin(Pin('Rostock', mode))
+    germany.add_pin(Pin('Stendal', mode))
+    germany.add_pin(Pin('Magdeburg', mode))
+    germany.add_pin(Pin('München', mode))
+    germany.add_pin(Pin('Leipzig', mode))
+    germany.add_pin(Pin('Dresden', mode))
+    germany.add_pin(Pin('Braunschweig', mode))
+    germany.add_pin(Pin('Stuttgart', mode))
+    germany.add_pin(Pin('Mannheim', mode))
+    germany.add_pin(Pin('Nürnberg', mode))
+    germany.add_pin(Pin('Düsseldorf', mode))
+    germany.add_pin(Pin('Kiel', mode))
+    germany.add_pin(Pin('Hannover', mode))
+    germany.add_pin(Pin('Schwerin', mode))
+    germany.add_pin(Pin('Jena', mode))
+    germany.add_pin(Pin('Fulda', mode))
+    # germany.add_pin(Pin('Hamburg', mode))
+    germany.add_pin(Pin('Karlsruhe', mode))
+    germany.add_pin(Pin('Münster', mode))
+    germany.add_pin(Pin('Greifswald', mode))
+    germany.add_pin(Pin('Bremen', mode))
+    germany.add_pin(Pin('Wiesbaden', mode))
 
     raw_img_name = f'raw-{round(time())}.png'
     germany.save(raw_img_name)
@@ -110,9 +135,9 @@ def write_header(
     font = ImageFont.truetype(font_path, font_size)
     font_width, font_height = font.getsize(text) 
 
-    print(f'Width: {font_width}, Size: {font_size}')
+    # print(f'Width: {font_width}, Size: {font_size}')
     while font_width > img_width:
-        print(f'Width: {font_width}, Size: {font_size}')
+        # print(f'Width: {font_width}, Size: {font_size}')
         font_size -= 1
         font = ImageFont.truetype(font_path, font_size)
         font_width, font_height = font.getsize(text)
@@ -227,11 +252,5 @@ def frame_img(img: Image, added_frame_px: int) -> Image:
 
 
 if __name__ == '__main__':
-    # main()
-    from draw.Pin import Pin
-
-    pin_symbol_path = os.path.join('data', 'img', 'pin-google.png')
-    pin = Pin('Magdeburg', pin_symbol_path)
-    pin = Pin('Hamburg', pin_symbol_path)
-    Pin('Wanzleben-Börde', pin_symbol_path)
+    main()
     

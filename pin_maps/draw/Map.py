@@ -1,9 +1,12 @@
 # Python libraries
 import os
+# Internal modules
+from draw.Pin import Pin
 # External modules
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import matplotlib.pyplot as plt
+import numpy as np
 from PIL import Image
 # Typing
 from typing import List, Tuple
@@ -48,20 +51,28 @@ class Map:
         self.ax.imshow(background, origin = 'upper', extent = background_extent)
 
 
-    def add_pin(self, file_name: str, coords: Tuple[float, float]) -> None:
-        """Adds a pin to the map.
+    def add_pin(self, pin: Pin, lat_width: float = 0.6, shadow_factor: float = 1.35) -> None:
+        # Wir wollen Pins mit gleicher Größe, aber originalem Verhältnis auf der Karte sehen.
+        pin_img = pin.img
+        width, height = pin_img.size
+        print(pin_img.size)
+        pin_arr = np.array(pin_img) / 255.0
+        lon, lat = pin.position
 
-        Args:
-            file_name (str): The file name of the pin that will be displayed.
-            coords (Tuple[float, float]): The coordinates of where the pin will be placed.
-        """
+        if lon < 49.9:
+            lon -= 0.2
+        elif lon > 53.5:
+            lon += 0.1 
 
-        pin_path = os.path.join('data', 'img', file_name)
-        pin = plt.imread(pin_path)
+        lon_height = lat_width / width * (height / shadow_factor)
+        lat_start = lat - 0.5 * lat_width
+        lat_end = lat + 0.5 * lat_width
+        extent = (lat_start, lat_end, lon, lon + lon_height)
+        
+        print(extent)
+        self.ax.imshow(pin_arr, origin = 'upper', extent = extent, transform = self.projection, zorder = 11)
 
-        lat, lon = coords
-        pin_extent = (lat, lat + 0.6, lon, lon + 0.5)
-        self.ax.imshow(pin, origin = 'upper', extent = pin_extent, transform = self.projection, zorder = 11)
+
 
     
     def to_PIL(self) -> Image:
