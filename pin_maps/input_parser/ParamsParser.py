@@ -10,15 +10,6 @@ from PIL import ImageFont
 # Typing
 from typing import Union, List, Tuple
 
-# NOTE Needed information
-# Country name => shapefile name
-    # Rahmen Land
-    # Rahmen Hintergrund
-    # 
-# Pin => Dateiname, Pin-Koordinaten
-# Hintergrundname => Dateiname 
-# Text1, Text2
-# Font1, Font2
 
 class ParamsParser:
     """Class that makes it easy to retrieve parsed parameters."""
