@@ -13,7 +13,6 @@ from typing import List, Tuple
 
 class Map:
     """Represents the map on which one can draw.
-
     Args:
         shapefile_name (str): Name of the shapefile.
         background_name (str): Name of the background file.
@@ -49,6 +48,7 @@ class Map:
         background_extent = (5.82, 15.12, 47.19, 55.31) # (west, east, south, north)
 
         self.ax.imshow(background, origin = 'upper', extent = background_extent)
+        self.pins = []
 
 
     def add_pin(self, pin: Pin, lat_width: float = 0.6, shadow_factor: float = 1.35) -> None:
@@ -69,10 +69,12 @@ class Map:
         lat_end = lat + 0.5 * lat_width
         extent = (lat_start, lat_end, lon, lon + lon_height)
         
-        print(extent)
-        self.ax.imshow(pin_arr, origin = 'upper', extent = extent, transform = self.projection, zorder = 11)
-
-
+        # Will be drawn in the save method because the list needs order by longitude first.
+        self.pins.append({
+            'img': pin_arr,
+            'extent': extent,
+            'lon': lon
+        })
 
     
     def to_PIL(self) -> Image:
@@ -82,11 +84,17 @@ class Map:
 
 
     def save(self, file_name: str) -> None:
-        """Saves the file in the output directory.
+        """First, draws list of pins, then saves the file in the output directory.
 
         Args:
             file_name (str): The name the file will be given in the directory.
         """
         
+        # Order pins by longitude, so no shadow is draw on top of other pin.
+        self.pins.sort(key = lambda pin: pin['lon'])
+        self.pins.reverse()
+        for pin in self.pins:
+            self.ax.imshow(pin['img'], origin = 'upper', extent = pin['extent'], transform = self.projection, zorder = 11)
+
         self.ax.set_aspect(self.aspect_ratio)
         plt.savefig(os.path.join('output', file_name))

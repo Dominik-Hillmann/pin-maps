@@ -19,7 +19,8 @@ class Pin:
     """
 
     __pin_cache_path = os.path.join('data', 'img', 'pin-cache')
-    __base_url = 'https://de.wikipedia.org/wiki/'
+    __wiki_base_url = 'https://de.wikipedia.org/wiki/'
+    __seach_url = 'https://de.wikipedia.org/w/index.php?search={}'
 
     def __init__(self, location: Union[str, Tuple[float, float]], symbol_path: str):
         self.__location = Coordinates(location)
@@ -60,26 +61,25 @@ class Pin:
             Image.Image: The heraldry image.
         """
 
-        reply = requests.get(self.__base_url + location_name)
+        reply = requests.get(self.__wiki_base_url + location_name)
         if reply.status_code != 200:
-            raise ConnectionRefusedError(f'Status code {reply.status_code}: cannot contact {self.__base_url + location_name}.')
+            raise ConnectionRefusedError(f'Status code {reply.status_code}: cannot contact {self.__wiki_base_url + location_name}.')
         
-        soup = BeautifulSoup(reply.content, 'html.parser')
-        
-        heraldry_url = None
-        imgs = soup.find_all('img')
-        for img in imgs:
-            heraldry_in_alt = 'wappen' in img['alt'].lower()
-            heraldry_in_src = 'wappen' in img['src'].lower()
-            name_in_alt = location_name.lower() in img['alt'].lower()
-            name_in_src = location_name.lower() in img['src'].lower()
-            big_heraldry = 'groß' in img['src'].lower() or 'groß' in img['alt'].lower()
-            if (heraldry_in_alt or heraldry_in_src) and (name_in_alt or name_in_src) and not big_heraldry:
-                heraldry_url = img['src']
-                break
-        
+        heraldry_url = self.__search_heraldry_link(reply.content, location_name.replace(' ', '_'))        
         if heraldry_url is None:
-            raise LookupError(f'Unable to find a heraldry image in {self.__base_url + location_name}.')
+            search_url = self.__seach_url.format(location_name.replace(' ', '+'))
+            search_reply = requests.get(search_url)
+            if search_reply.status_code != 200:
+                raise ConnectionRefusedError(f'Status code {search_reply.status_code}: cannot contact {search_url}.')
+
+            city_url = self.__search_city_link(search_reply.content)
+            attempt_2_reply = requests.get(city_url)
+            if attempt_2_reply.status_code != 200:
+                raise ConnectionRefusedError(f'Status code {attempt_2_reply.status_code}: cannot contact {city_url}.')
+
+            heraldry_url = self.__search_heraldry_link(attempt_2_reply.content, location_name.replace(' ', '_'))
+            if heraldry_url is None:
+                raise LookupError(f'Unable to find a heraldry image for {location_name}.')
         
         heraldry_url = 'http:' + heraldry_url        
         img_reply = requests.get(heraldry_url)
@@ -167,6 +167,32 @@ class Pin:
 
         return ell_img
 
+
+    @staticmethod
+    def __search_heraldry_link(html: str, location_name: str) -> Union[str, None]:
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        heraldry_url = None
+        imgs = soup.find_all('img')
+        for img in imgs:
+            heraldry_in_alt = 'wappen' in img['alt'].lower()
+            heraldry_in_src = 'wappen' in img['src'].lower()
+            name_in_alt = location_name.lower() in img['alt'].lower()
+            name_in_src = location_name.lower() in img['src'].lower()
+            if (heraldry_in_alt or heraldry_in_src) and (name_in_alt or name_in_src):
+                heraldry_url = img['src']
+                break
+        
+        return heraldry_url
+
+    @staticmethod
+    def __search_city_link(html: str) -> Union[str, None]:
+        soup = BeautifulSoup(html, 'html.parser')
+        lis = soup.find_all('li')
+        for li in lis:
+            text = li.get_text().lower()
+            if 'stadt' in text or 'metropole' in text:
+                return 'https://de.wikipedia.org' + li.a['href']
 
     def __str__(self):
         return 'Pin(symbol=' + self.__symbol_path + ', loc=' + str(tuple(self.location)) + ')'

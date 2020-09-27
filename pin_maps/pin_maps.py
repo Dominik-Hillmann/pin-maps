@@ -35,14 +35,13 @@ def main() -> None:
     # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
     germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
     
-    # germany.add_pin('fulda-pin.png', (9.41, 50.33))
-    # germany.add_pin('stuttgart-pin.png', (9.202620, 48.795474))
-    # germany.add_pin_old('rostock-pin.png', (12.099246, 54.122477))
     mode = 'heraldry'
+    
+    germany.add_pin(Pin('Karlsruhe', mode))
     germany.add_pin(Pin('Berlin', mode))
     germany.add_pin(Pin('Rostock', mode))
-    germany.add_pin(Pin('Stendal', mode))
     germany.add_pin(Pin('Magdeburg', mode))
+    germany.add_pin(Pin('Stendal', mode))
     germany.add_pin(Pin('München', mode))
     germany.add_pin(Pin('Leipzig', mode))
     germany.add_pin(Pin('Dresden', mode))
@@ -57,11 +56,18 @@ def main() -> None:
     germany.add_pin(Pin('Jena', mode))
     germany.add_pin(Pin('Fulda', mode))
     # germany.add_pin(Pin('Hamburg', mode))
-    germany.add_pin(Pin('Karlsruhe', mode))
     germany.add_pin(Pin('Münster', mode))
     germany.add_pin(Pin('Greifswald', mode))
     germany.add_pin(Pin('Bremen', mode))
     germany.add_pin(Pin('Wiesbaden', mode))
+    # Iffy cases.
+    germany.add_pin(Pin('Frankfurt', mode))
+    germany.add_pin(Pin('Freiburg', mode))
+
+    germany.add_pin(Pin('Oldenburg', mode))
+    germany.add_pin(Pin('Würzburg', mode))
+    germany.add_pin(Pin('Lenzen', mode))
+    germany.add_pin(Pin('Garmisch', mode))
 
     raw_img_name = f'raw-{round(time())}.png'
     germany.save(raw_img_name)
