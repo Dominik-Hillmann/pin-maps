@@ -22,18 +22,18 @@ class Pin:
     __wiki_base_url = 'https://de.wikipedia.org/wiki/'
     __seach_url = 'https://de.wikipedia.org/w/index.php?search={}'
 
-    def __init__(self, location: Union[str, Tuple[float, float]], symbol_path: str):
-        self.__location = Coordinates(location)
+    def __init__(self, location: Union[str, Coordinates], symbol_path: str):
+        self.__location = location if type(location) is Coordinates else Coordinates(location)
 
         if symbol_path != 'heraldry':
             self.img = Image.open(symbol_path)
         else:
             try:
-                self.img = self.__get_heraldry_cached(location.lower())
-                print(f'Retrieving {location} from cache.')
+                self.img = self.__get_heraldry_cached(self.__location.name.lower())
+                print(f'Retrieving {self.__location.name} from cache.')
             except LookupError:
-                self.img = self.__get_heraldry_wiki(location)
-                print(f'Retrieving {location} from Wikipedia.')
+                self.img = self.__get_heraldry_wiki(self.__location.name.lower())
+                print(f'Retrieving {self.__location.name} from Wikipedia.')
     
 
     @property
@@ -61,25 +61,30 @@ class Pin:
             Image.Image: The heraldry image.
         """
 
-        reply = requests.get(self.__wiki_base_url + location_name)
-        if reply.status_code != 200:
-            raise ConnectionRefusedError(f'Status code {reply.status_code}: cannot contact {self.__wiki_base_url + location_name}.')
+        wiki_url = self.__wiki_base_url + location_name.replace(' ', '_')
+        reply = requests.get(wiki_url)
+        if reply.status_code not in [200, 404]:
+            raise ConnectionRefusedError(f'Status code {reply.status_code}: cannot contact {wiki_url}.') # 404 accepted because of wrong spelling possibilty.
         
+        # TODO Refactor this part! Ugly!
         heraldry_url = self.__search_heraldry_link(reply.content, location_name.replace(' ', '_'))        
         if heraldry_url is None:
             search_url = self.__seach_url.format(location_name.replace(' ', '+'))
             search_reply = requests.get(search_url)
             if search_reply.status_code != 200:
                 raise ConnectionRefusedError(f'Status code {search_reply.status_code}: cannot contact {search_url}.')
-
-            city_url = self.__search_city_link(search_reply.content)
-            attempt_2_reply = requests.get(city_url)
-            if attempt_2_reply.status_code != 200:
-                raise ConnectionRefusedError(f'Status code {attempt_2_reply.status_code}: cannot contact {city_url}.')
-
-            heraldry_url = self.__search_heraldry_link(attempt_2_reply.content, location_name.replace(' ', '_'))
+            
+            heraldry_url = self.__search_heraldry_link(search_reply.content, location_name)
             if heraldry_url is None:
-                raise LookupError(f'Unable to find a heraldry image for {location_name}.')
+                city_url = self.__search_city_link(search_reply.content)
+                attempt_2_reply = requests.get(city_url)
+                if attempt_2_reply.status_code != 200:
+                    raise ConnectionRefusedError(f'Status code {attempt_2_reply.status_code}: cannot contact {city_url} at attempt two.')
+
+                heraldry_url = self.__search_heraldry_link(attempt_2_reply.content, location_name)
+                print('Heraldry URL is', heraldry_url)
+                if heraldry_url is None:
+                    raise LookupError(f'Unable to find a heraldry image for {location_name}.')
         
         heraldry_url = 'http:' + heraldry_url        
         img_reply = requests.get(heraldry_url)
@@ -115,7 +120,42 @@ class Pin:
         
         return Image.open(os.path.join(self.__pin_cache_path, filename))
 
+
+    @staticmethod
+    def __search_heraldry_link(html: str, location_name: str) -> Union[str, None]:
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        heraldry_url = None
+        imgs = soup.find_all('img')
+        for img in imgs:
+            heraldry_in_alt = 'wappen' in img['alt'].lower()
+            heraldry_in_src = 'wappen' in img['src'].lower()
+            # name_in_alt = location_name.lower() in img['alt'].lower()
+            # name_in_src = location_name.lower() in img['src'].lower()
+            if (heraldry_in_alt or heraldry_in_src):# and (name_in_alt or name_in_src):
+                heraldry_url = img['src']
+                break
+        
+        return heraldry_url
+
+    @staticmethod
+    def __search_city_link(html: str) -> Union[str, None]:
+        soup = BeautifulSoup(html, 'html.parser')
+        lis = soup.find_all('li')
+        for li in lis:
+            text = li.get_text().lower()
+            if 'stadt ' in text or 'metropole ' in text or 'ort' in text:
+                return 'https://de.wikipedia.org' + li.a['href']
+
+    def __str__(self):
+        return 'Pin(symbol=' + self.__symbol_path + ', loc=' + str(tuple(self.location)) + ')'
+
     
+    def __iter__(self):
+        for coord in self.location.coords:
+            yield float(coord)
+
+
     @staticmethod
     def __flood_delete_background(heraldry: Image.Image, px_dist: int = 50) -> Image.Image:
         """Removes background of the heraldry if it is not transparent.
@@ -166,38 +206,3 @@ class Pin:
         ell_img.paste(heraldry, (0, 0), heraldry)
 
         return ell_img
-
-
-    @staticmethod
-    def __search_heraldry_link(html: str, location_name: str) -> Union[str, None]:
-        soup = BeautifulSoup(html, 'html.parser')
-        
-        heraldry_url = None
-        imgs = soup.find_all('img')
-        for img in imgs:
-            heraldry_in_alt = 'wappen' in img['alt'].lower()
-            heraldry_in_src = 'wappen' in img['src'].lower()
-            name_in_alt = location_name.lower() in img['alt'].lower()
-            name_in_src = location_name.lower() in img['src'].lower()
-            if (heraldry_in_alt or heraldry_in_src) and (name_in_alt or name_in_src):
-                heraldry_url = img['src']
-                break
-        
-        return heraldry_url
-
-    @staticmethod
-    def __search_city_link(html: str) -> Union[str, None]:
-        soup = BeautifulSoup(html, 'html.parser')
-        lis = soup.find_all('li')
-        for li in lis:
-            text = li.get_text().lower()
-            if 'stadt' in text or 'metropole' in text:
-                return 'https://de.wikipedia.org' + li.a['href']
-
-    def __str__(self):
-        return 'Pin(symbol=' + self.__symbol_path + ', loc=' + str(tuple(self.location)) + ')'
-
-    
-    def __iter__(self):
-        for coord in self.location.coords:
-            yield float(coord)

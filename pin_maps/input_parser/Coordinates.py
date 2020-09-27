@@ -19,26 +19,15 @@ class Coordinates:
     __base_query = 'https://nominatim.openstreetmap.org/search.php?q={}&format=json'
     __cache_path = os.path.join('data', 'coords-cache.csv')
 
-    def __init__(self, location: Union[str, Tuple[float, float]]):
-        if type(location) is str:
-            query, coords = location, None
-        elif type(location) is tuple:
-            query, coords = None, location
-        else:
-            raise ValueError('Please provide either a location string or the coordinates as a tuple of floats.')
-
-        if query is not None:
-            self.__latitude, self.__longitude = self.__resolve(query)
-        elif coords is not None:
-            self.__latitude, self.__longitude = coords
-        else:
-            raise ValueError('Please provide either a location string or the coordinates.')
-        # When coordinates are resolved or read, check if they are inside the Germany box (top, left, right, bottom.)
-    
+    def __init__(self, location: str):
+        self.name = location
+        self.__latitude, self.__longitude = self.__resolve(location)
+            
     
     def __resolve(self, query: str) -> Tuple[float, float]:
         """Resolves the location name to coordinates using either the cache 
         or the nominatem API.
+
         Args:
             query (str): The location's name.
 
@@ -75,6 +64,7 @@ class Coordinates:
     @property
     def coords(self) -> Tuple[float, float]:
         """The coordinates of the location.
+
         Returns:
             Tuple[float, float]: The coordinates.
         """
@@ -84,6 +74,7 @@ class Coordinates:
 
     def __write_cache(self, location_name: str, coords: Tuple[float, float]) -> None:
         """Writes a location to cache.
+
         Args:
             location_name (str): The name of the location.
             coords (Tuple[float, float]): The coordinates of the location.
@@ -96,6 +87,7 @@ class Coordinates:
 
     def __search_cache(self, location: str) -> Union[Tuple[float, float], None]:
         """Returns coordinates for the location name if it was searched before.
+
         Args:
             location (str): The name of the location of which you want the coordinates.
 

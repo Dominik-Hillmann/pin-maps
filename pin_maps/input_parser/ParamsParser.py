@@ -16,6 +16,7 @@ class ParamsParser:
 
     __standard_head_font = os.path.join('data', 'fonts', 'grandhotel.ttf')
     __standard_main_font = os.path.join('data', 'fonts', 'josefin-sans-regular.ttf')
+    __standard_marker_name = 'heraldry'
 
     def __init__(self):
         # Load configuration file.
@@ -48,13 +49,12 @@ class ParamsParser:
         )
         parser.add_argument(
             '-t', '--towns',
-            nargs = '+', 
             type = str,
             help = 'A list of names of locations. They will automatically ' + 
             'resolved to coordinates, if they can be found.'
         )
         parser.add_argument(
-            '-m', '--markers',
+            '-m', '--marker',
             type = str,
             help = 'The name of the image the locations will be marked with.'
         )
@@ -82,16 +82,15 @@ class ParamsParser:
 
         self.__parsed_args = vars(parser.parse_args())
         print(self.__parsed_args)
-        print()
-        print(self.__config)
-        # Checks pin positions.
+
+        # CHECK LATS AND LONS
         lats = self.__parsed_args['latitudes']
         lons = self.__parsed_args['longitudes']
         if lats is not None and lons is not None:
             if len(lats) != len(lons):
                 raise ValueError('Latitudes and longitudes need to have the same length.')
         
-        # Checks available countries, wallpapers and fonts.
+        # COUNTRY POSSIBILITY COUNTRY
         possib_countries = list(self.__config['countries'].keys())
         country = self.__parsed_args['country']
         if country not in possib_countries:
@@ -100,36 +99,48 @@ class ParamsParser:
                 f'{", ".join(possib_countries)} are possible.'
             )
         
+        # CHECK POSSIBILTY WALLPAPER
         possib_wallpapers = list(self.__config['countries'][country]['wallpapers'].keys())
         wallpaper = self.__parsed_args['wallpaper']
         if wallpaper not in possib_wallpapers:
             raise ValueError(f'Wallpaper "{wallpaper}" not available; available are: {", ".join(possib_wallpapers)}.')
         
+        # CHECK POSSIBILITY FONT
         fonts = self.__parsed_args['fonts']
         possib_fonts = list(self.__config['fonts'].keys())
         if fonts is not None:
             for font in fonts:
                 if font not in possib_fonts:
-                    raise ValueError(f'Font "{font}" not available; available are: {", ".join(possib_fonts)}')
-
-
+                    raise ValueError(f'Font "{font}" not available; available are: {", ".join(possib_fonts)}.')
+        
+        # CHECK POSSIBILITY MARKERS
+        marker = self.__parsed_args['marker']
+        possib_markers = list(self.__config['markers'].keys())
+        if (marker not in possib_markers) and (marker is not None):
+            raise ValueError(f'Marker {marker} not available; available are: {", ".join(possib_markers)}.')
+        
+        # PARSING ALL POSITIONS
         latitudes = self.__parsed_args['latitudes']
         longitudes = self.__parsed_args['longitudes']
         coord_pins = zip(latitudes, longitudes) if latitudes is not None else []
-        name_pins = self.__parsed_args['towns'] if self.__parsed_args['towns'] is not None else []
-        print('name pins' + str(name_pins))
-        self.__pins = []
-        for pin in coord_pins + name_pins:
+        name_pins = self.__parsed_args['towns']
+        if name_pins is not None:
+            sep = ','
+            name_pins = [town.replace(sep, '').lstrip().strip() for town in name_pins.split(sep)]
+        else:
+            name_pins = []
+        self.locations = []
+        for location in coord_pins + name_pins:
             try:
-                self.__pins.append(Coordinates(pin))
+                self.locations.append(Coordinates(location))
             except ConnectionRefusedError as e:
-                print(e) # Information about which town name could not be resolved.
-    
-
+                print(e) # Information about which town name could not be resolved.    
 
     @property
-    def pins(self) -> Union[List[Coordinates], None]:
-        return self.__pins
+    def marker_symbol(self):
+        chosen_marker = self.__parsed_args['marker']
+        available_markers = self.__config['markers']
+        return available_markers[chosen_marker] if chosen_marker is not None else available_markers[self.__standard_marker_name]
 
 
     @property

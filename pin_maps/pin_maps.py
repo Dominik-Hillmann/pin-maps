@@ -23,11 +23,6 @@ from pprint import pprint
 def main() -> None:
     params = ParamsParser()
     create_output_dir()
-    print('Country')
-    pprint(params.country)
-    print()
-
-    print('Wallpaper: ' + str(params.wallpaper))
 
     height_text_space = 750
     text = u'Inge & Maik-Günter'
@@ -35,39 +30,14 @@ def main() -> None:
     # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
     germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
     
-    mode = 'heraldry'
-    
-    germany.add_pin(Pin('Karlsruhe', mode))
-    germany.add_pin(Pin('Berlin', mode))
-    germany.add_pin(Pin('Rostock', mode))
-    germany.add_pin(Pin('Magdeburg', mode))
-    germany.add_pin(Pin('Stendal', mode))
-    germany.add_pin(Pin('München', mode))
-    germany.add_pin(Pin('Leipzig', mode))
-    germany.add_pin(Pin('Dresden', mode))
-    germany.add_pin(Pin('Braunschweig', mode))
-    germany.add_pin(Pin('Stuttgart', mode))
-    germany.add_pin(Pin('Mannheim', mode))
-    germany.add_pin(Pin('Nürnberg', mode))
-    germany.add_pin(Pin('Düsseldorf', mode))
-    germany.add_pin(Pin('Kiel', mode))
-    germany.add_pin(Pin('Hannover', mode))
-    germany.add_pin(Pin('Schwerin', mode))
-    germany.add_pin(Pin('Jena', mode))
-    germany.add_pin(Pin('Fulda', mode))
-    # germany.add_pin(Pin('Hamburg', mode))
-    germany.add_pin(Pin('Münster', mode))
-    germany.add_pin(Pin('Greifswald', mode))
-    germany.add_pin(Pin('Bremen', mode))
-    germany.add_pin(Pin('Wiesbaden', mode))
-    # Iffy cases.
-    germany.add_pin(Pin('Frankfurt', mode))
-    germany.add_pin(Pin('Freiburg', mode))
+    for location in params.locations:
+        try:
+            pin = Pin(location, params.marker_symbol)
+        except (ConnectionRefusedError, LookupError) as e:
+            print(f'Had to skip pin at position {str(location)} due to {str(e)}.')
+            continue
 
-    germany.add_pin(Pin('Oldenburg', mode))
-    germany.add_pin(Pin('Würzburg', mode))
-    germany.add_pin(Pin('Lenzen', mode))
-    germany.add_pin(Pin('Garmisch', mode))
+        germany.add_pin(pin)
 
     raw_img_name = f'raw-{round(time())}.png'
     germany.save(raw_img_name)
