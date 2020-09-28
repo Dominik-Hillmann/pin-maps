@@ -147,6 +147,9 @@ class Pin:
             if 'stadt ' in text or 'metropole ' in text or 'ort' in text:
                 return 'https://de.wikipedia.org' + li.a['href']
 
+        return None
+        
+
     def __str__(self):
         return 'Pin(symbol=' + self.__symbol_path + ', loc=' + str(tuple(self.location)) + ')'
 

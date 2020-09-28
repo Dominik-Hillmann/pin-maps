@@ -28,7 +28,8 @@ def main() -> None:
     text = u'Inge & Maik-Günter'
     added_frame_px = 150
     # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
-    germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
+    # germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
+    germany = Map('de-neg.shp', 'old-topo.png', [5.7, 15.3, 47.2, 56.2])
     
     for location in params.locations:
         try:
