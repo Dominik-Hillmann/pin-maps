@@ -108,10 +108,18 @@ class Coordinates:
         return None
 
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'Coordinates(latitude={self.__latitude}, longitude={self.__longitude})'
 
     
-    def __iter__(self):
+    def __iter__(self) -> Tuple[float, float]:
         for coord in [self.__latitude, self.__longitude]:
             yield coord
+
+    
+    def __eq__(self, other: object) -> bool:
+        if type(other) is not Coordinates:
+            return False
+        else:
+            other_lat, other_lon = other.coords
+            return other_lat == self.__latitude and other_lon == self.__longitude
