@@ -133,8 +133,9 @@ class ParamsParser:
         for location in coord_pins + name_pins:
             try:
                 self.locations.append(Coordinates(location))
-            except ConnectionRefusedError as e:
+            except NameError as e:
                 print(e) # Information about which town name could not be resolved.    
+                continue
 
     @property
     def marker_symbol(self):

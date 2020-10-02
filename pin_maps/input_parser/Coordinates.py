@@ -8,12 +8,12 @@ from time import sleep
 from typing import Tuple, Union
 
 class Coordinates:
-    """Contains and automatically resolves locations to coordinates.
+    """Contains and resolves locations to coordinates.
     Args:
         location (Union[str, Tuple[float, float]]): The location's name or the tuple of coordinates.
 
     Raises:
-        ValueError: If the location parameter does not conform to the expected format as described above.
+        NameError: The location cannot be resolved to coordinates.
     """
 
     __base_query = 'https://nominatim.openstreetmap.org/search.php?q={}&format=json'
@@ -21,10 +21,14 @@ class Coordinates:
 
     def __init__(self, location: str):
         self.name = location
-        self.__latitude, self.__longitude = self.__resolve(location)
+        try:
+            self.__latitude, self.__longitude = self.__resolve(location)
+        except (ConnectionRefusedError, ValueError) as e:
+            raise NameError(f'Location {location} could not be resolved.')
             
+
     
-    def __resolve(self, query: str) -> Tuple[float, float]:
+    def __resolve(self, query: str) -> Union[Tuple[float, float], None]:
         """Resolves the location name to coordinates using either the cache 
         or the nominatem API.
 
@@ -33,6 +37,7 @@ class Coordinates:
 
         Raises:
             ConnectionRefusedError: If there are problems contacting the nominatem API.
+            ValueError: Connection to nominatem succesful but location does not exist.
 
         Returns:
             Tuple[float, float]: The coordinates.
@@ -52,7 +57,7 @@ class Coordinates:
         try:
             result = json.loads(reply.content)[0]
         except IndexError:
-            exit(f'ERROR: Could not find coordinates for a location named "{query}".')
+            raise ValueError(f'No coordinates found for "{query}".')
 
         lat = float(result['lat'])
         lon = float(result['lon'])
