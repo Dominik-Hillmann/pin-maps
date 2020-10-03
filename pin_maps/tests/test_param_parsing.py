@@ -16,11 +16,8 @@ root = sys.argv[0]
 ### GENERAL TESTS ###
 def test_on_missing_required_param():
     sys.argv = [root]
-    try:
+    with pytest.raises(SystemExit):
         params = ParamsParser()
-        pytest.fail('It should not be possible to leave out required parameters.')
-    except SystemExit:
-        pass
 
 
 ### TOWN PARAMETERS ###
@@ -55,22 +52,18 @@ def test_no_towns_allowed():
 ### COUNTRY PARAMETER ###
 
 def test_error_on_nonexistent_country():
-    try:
-        sys.argv = [root, '-c', 'I should not be here', '-w', 'space']
-        params = ParamsParser()
-        pytest.fail('Exception should be caused because of nonexistent country.')
-    except ValueError:
-        pass
+    sys.argv = [root, '-c', 'I should not be here', '-w', 'space']
+    with pytest.raises(ValueError):
+        ParamsParser()
+        
 
 ### WALLPAPER PARAMETER ###
 
 def test_error_on_nonexistent_wallpaper():
-    try:
-        sys.argv = [root, '-c', 'de', '-w', 'I should not be here']
+    sys.argv = [root, '-c', 'de', '-w', 'I should not be here']
+    with pytest.raises(ValueError):
         params = ParamsParser()
-        pytest.fail('Exception should be caused because of nonexistent wallpaper.')
-    except ValueError:
-        pass
+        
 
 ### FONTS PARAMETER ###
 
@@ -81,27 +74,18 @@ def test_standard_fonts():
     assert os.path.isfile(params.head_font_path)
     assert os.path.isfile(params.main_font_path)
     
-    try:
-        ImageFont.truetype(params.head_font_path)
-        ImageFont.truetype(params.main_font_path)
-    except OSError as e:
-        pytest.fail('Cannot open the standard fonts: {}'.format(str(e)))
+    ImageFont.truetype(params.head_font_path)
+    ImageFont.truetype(params.main_font_path)
     
 
 def test_fail_on_nonexistent_fonts():
-    raise NotImplementedError()
+    sys.argv = [root, '-c', 'de', '-w', 'space', '-f', 'testeins', 'testzwei']
+    with pytest.raises(ValueError):
+        ParamsParser()
 
 
 def test_fail_on_wrong_font_input_format():
     sys.argv = [root, '-c', 'de', '-w', 'space', '-f', 'nureine']
-    try:
+    with pytest.raises(SystemExit):
         ParamsParser()
-        pytest.fail('Only one font should not be accepted.')
-    except SystemExit:
-        pass
-
-    sys.argv[len(sys.argv) - 1] = 'crimson crimson'
-    print(sys.argv)
-    ParamsParser()
-
 
