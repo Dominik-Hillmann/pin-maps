@@ -31,7 +31,7 @@ def test_town_names_parsing():
     for parsed, correct in zip(params.locations, correct_locations):
         assert parsed == correct
 
-    
+
 def test_skip_on_nonexistent_town():
     sys.argv = [root, '-c', 'de', '-w', 'space', '-t', '"Wanzleben, Idonotexistatalltowm"']
     params = ParamsParser()

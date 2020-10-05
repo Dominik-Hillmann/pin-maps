@@ -7,8 +7,11 @@ from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw
 # Internal modules
 from input_parser.Coordinates import Coordinates
+from draw.ImageTransform import ImageTransform
+from draw.AddShadow import AddShadow
+from draw.BackgroundDeletion import BackgroundDeletion
 # Typing
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 
 class Pin:
     """Represents a pin on the map.
@@ -22,8 +25,9 @@ class Pin:
     __wiki_base_url = 'https://de.wikipedia.org/wiki/'
     __seach_url = 'https://de.wikipedia.org/w/index.php?search={}'
 
-    def __init__(self, location: Union[str, Coordinates], symbol_path: str):
+    def __init__(self, location: Union[str, Coordinates], symbol_path: str, transforms: List[ImageTransform]):
         self.__location = location if type(location) is Coordinates else Coordinates(location)
+        self.__transforms = transforms
 
         if symbol_path != 'heraldry':
             self.img = Image.open(symbol_path)
@@ -93,8 +97,10 @@ class Pin:
 
         img_data = io.BytesIO(img_reply.content)
         heraldry = Image.open(img_data)
-        heraldry = self.__flood_delete_background(heraldry)
-        heraldry = self.__add_shadow(heraldry)
+        # heraldry = self.__flood_delete_background(heraldry)
+        # heraldry = self.__add_shadow(heraldry)
+        for transform in self.__transforms:
+            heraldry = transform(heraldry)
         heraldry.save(os.path.join(self.__pin_cache_path, location_name.lower() + '-pin.png')) # Caching
 
         return heraldry
@@ -138,6 +144,7 @@ class Pin:
         
         return heraldry_url
 
+
     @staticmethod
     def __search_city_link(html: str) -> Union[str, None]:
         soup = BeautifulSoup(html, 'html.parser')
@@ -159,53 +166,53 @@ class Pin:
             yield float(coord)
 
 
-    @staticmethod
-    def __flood_delete_background(heraldry: Image.Image, px_dist: int = 50) -> Image.Image:
-        """Removes background of the heraldry if it is not transparent.
+    # @staticmethod
+    # def __flood_delete_background(heraldry: Image.Image, px_dist: int = 50) -> Image.Image:
+    #     """Removes background of the heraldry if it is not transparent.
 
-        Args:
-            heraldry (Image.Image): The image from which background should be removed.
-            px_dist (int, optional): Max. pixel distance in the flood fill algorithm. Defaults to 50.
+    #     Args:
+    #         heraldry (Image.Image): The image from which background should be removed.
+    #         px_dist (int, optional): Max. pixel distance in the flood fill algorithm. Defaults to 50.
 
-        Returns:
-            Image.Image: The image with transparent background.
-        """
+    #     Returns:
+    #         Image.Image: The image with transparent background.
+    #     """
         
-        heraldry = heraldry.convert('RGBA')
-        new_val = (255, 255, 255, 0) # Last zero important: transparency.
-        seed_right = (val - 1 for val in heraldry.size)
-        ImageDraw.floodfill(heraldry, xy = seed_right, value = new_val, thresh = px_dist)
+    #     heraldry = heraldry.convert('RGBA')
+    #     new_val = (255, 255, 255, 0) # Last zero important: transparency.
+    #     seed_right = (val - 1 for val in heraldry.size)
+    #     ImageDraw.floodfill(heraldry, xy = seed_right, value = new_val, thresh = px_dist)
 
-        _, height = heraldry.size
-        seed_left = (0, height - 1)
-        ImageDraw.floodfill(heraldry, xy = seed_left, value = new_val, thresh = px_dist)
+    #     _, height = heraldry.size
+    #     seed_left = (0, height - 1)
+    #     ImageDraw.floodfill(heraldry, xy = seed_left, value = new_val, thresh = px_dist)
 
-        return heraldry
+    #     return heraldry
 
     
-    @staticmethod
-    def __add_shadow(heraldry: Image.Image, height_change: float = 1.1, ell_start: float = 0.9) -> Image.Image:
-        """Adds a shadow below the heraldry.
+    # @staticmethod
+    # def __add_shadow(heraldry: Image.Image, height_change: float = 1.1, ell_start: float = 0.9) -> Image.Image:
+    #     """Adds a shadow below the heraldry.
 
-        Args:
-            heraldry (Image.Image): The image to which you want to add the shadow.
-            height_change (float, optional): Percentage change to make space for the shadow. Defaults to 1.1.
-            ell_start (float, optional): Upper start of shadow as percentage of the height of the input image. Defaults to 0.9.
+    #     Args:
+    #         heraldry (Image.Image): The image to which you want to add the shadow.
+    #         height_change (float, optional): Percentage change to make space for the shadow. Defaults to 1.1.
+    #         ell_start (float, optional): Upper start of shadow as percentage of the height of the input image. Defaults to 0.9.
 
-        Returns:
-            Image.Image: The image containing a shadow.
-        """
+    #     Returns:
+    #         Image.Image: The image containing a shadow.
+    #     """
 
-        heraldry = heraldry.convert('RGBA')
-        orig_width, orig_height = heraldry.size
+    #     heraldry = heraldry.convert('RGBA')
+    #     orig_width, orig_height = heraldry.size
 
-        new_height = int(height_change * orig_height)
-        ell_img = Image.new('RGBA', (orig_width, new_height))
-        draw = ImageDraw.Draw(ell_img)
+    #     new_height = int(height_change * orig_height)
+    #     ell_img = Image.new('RGBA', (orig_width, new_height))
+    #     draw = ImageDraw.Draw(ell_img)
 
-        top_left = (0, int(ell_start * orig_height))
-        bot_right = (orig_width - 1, new_height - 1)
-        draw.ellipse((*top_left, *bot_right), fill = (0, 0, 0, 100))
-        ell_img.paste(heraldry, (0, 0), heraldry)
+    #     top_left = (0, int(ell_start * orig_height))
+    #     bot_right = (orig_width - 1, new_height - 1)
+    #     draw.ellipse((*top_left, *bot_right), fill = (0, 0, 0, 100))
+    #     ell_img.paste(heraldry, (0, 0), heraldry)
 
-        return ell_img
+    #     return ell_img
