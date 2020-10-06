@@ -9,6 +9,7 @@ class AddShadow(ImageTransform):
     """Adds a shadow below the heraldry.
 
     Args:
+    -----
         height_change (float, optional): Percentage change to make space for the shadow. Defaults to 1.1.
         ell_start (float, optional): Upper start of shadow as percentage of the height of the input image. Defaults to 0.9.
         fill_col (Tuple[int, int, int, int], optional): Color of the shadow. Defaults to (0, 0, 0, 100).

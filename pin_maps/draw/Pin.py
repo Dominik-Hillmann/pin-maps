@@ -1,4 +1,4 @@
-# Python librairies
+# Python libraries
 import requests
 import os
 import io
@@ -164,55 +164,3 @@ class Pin:
     def __iter__(self):
         for coord in self.location.coords:
             yield float(coord)
-
-
-    # @staticmethod
-    # def __flood_delete_background(heraldry: Image.Image, px_dist: int = 50) -> Image.Image:
-    #     """Removes background of the heraldry if it is not transparent.
-
-    #     Args:
-    #         heraldry (Image.Image): The image from which background should be removed.
-    #         px_dist (int, optional): Max. pixel distance in the flood fill algorithm. Defaults to 50.
-
-    #     Returns:
-    #         Image.Image: The image with transparent background.
-    #     """
-        
-    #     heraldry = heraldry.convert('RGBA')
-    #     new_val = (255, 255, 255, 0) # Last zero important: transparency.
-    #     seed_right = (val - 1 for val in heraldry.size)
-    #     ImageDraw.floodfill(heraldry, xy = seed_right, value = new_val, thresh = px_dist)
-
-    #     _, height = heraldry.size
-    #     seed_left = (0, height - 1)
-    #     ImageDraw.floodfill(heraldry, xy = seed_left, value = new_val, thresh = px_dist)
-
-    #     return heraldry
-
-    
-    # @staticmethod
-    # def __add_shadow(heraldry: Image.Image, height_change: float = 1.1, ell_start: float = 0.9) -> Image.Image:
-    #     """Adds a shadow below the heraldry.
-
-    #     Args:
-    #         heraldry (Image.Image): The image to which you want to add the shadow.
-    #         height_change (float, optional): Percentage change to make space for the shadow. Defaults to 1.1.
-    #         ell_start (float, optional): Upper start of shadow as percentage of the height of the input image. Defaults to 0.9.
-
-    #     Returns:
-    #         Image.Image: The image containing a shadow.
-    #     """
-
-    #     heraldry = heraldry.convert('RGBA')
-    #     orig_width, orig_height = heraldry.size
-
-    #     new_height = int(height_change * orig_height)
-    #     ell_img = Image.new('RGBA', (orig_width, new_height))
-    #     draw = ImageDraw.Draw(ell_img)
-
-    #     top_left = (0, int(ell_start * orig_height))
-    #     bot_right = (orig_width - 1, new_height - 1)
-    #     draw.ellipse((*top_left, *bot_right), fill = (0, 0, 0, 100))
-    #     ell_img.paste(heraldry, (0, 0), heraldry)
-
-    #     return ell_img
