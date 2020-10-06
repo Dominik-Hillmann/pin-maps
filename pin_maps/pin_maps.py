@@ -3,6 +3,8 @@
 
 # Internal modules
 from input_parser.ParamsParser import ParamsParser
+from draw.AddShadow import AddShadow
+from draw.BackgroundDeletion import BackgroundDeletion
 # from info_retrieval.Coordinates import Coordinates
 from draw.Map import Map
 from draw.Pin import Pin
@@ -11,9 +13,7 @@ import os
 from copy import deepcopy
 from time import time
 # External modules
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
+from PIL import Image, ImageDraw, ImageFont
 # Typing
 from typing import List, Tuple
 # Dev
@@ -29,11 +29,12 @@ def main() -> None:
     added_frame_px = 150
     # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
     # germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
+    img_transforms = [BackgroundDeletion(), AddShadow()]
     germany = Map('de-neg.shp', 'old-topo.png', [5.7, 15.3, 47.2, 56.2])
     
     for location in params.locations:
         try:
-            pin = Pin(location, params.marker_symbol)
+            pin = Pin(location, params.marker_symbol, img_transforms)
         except (ConnectionRefusedError, LookupError) as e:
             print(f'Had to skip pin at position {str(location)} due to {str(e)}.')
             continue
@@ -102,25 +103,36 @@ def write_header(
     font_path: str, 
     text: str, 
     height_cropped: int, 
-    frame_width: int, 
-    # added_frame_px: int,
+    frame_width: int,
     adjustment: int = 20
-) -> (ImageDraw.Draw, int):
+) -> Tuple[ImageDraw.Draw, int]:
+    """Writes the header below the image itself.
+
+    Args
+    ----
+        img (Image): 
+        font_path (str): 
+        text (str): 
+        height_cropped (int): 
+        frame_width (int):
+        adjustment (int): Defaults to 20.
+
+    Returns
+    -------
+        [type]: [description]
+    """
 
     img_width, img_height = img.size
     font_size = 500 # Arbitrary but high start value
     font = ImageFont.truetype(font_path, font_size)
     font_width, font_height = font.getsize(text) 
 
-    # print(f'Width: {font_width}, Size: {font_size}')
     while font_width > img_width:
-        # print(f'Width: {font_width}, Size: {font_size}')
         font_size -= 1
         font = ImageFont.truetype(font_path, font_size)
         font_width, font_height = font.getsize(text)
     
     draw = ImageDraw.Draw(img)
-    # draw.text((0, height_cropped + added_frame_px - adjustment), text, 'black', font)
     draw.text((0, height_cropped + frame_width - adjustment), text, 'black', font)
 
     return draw, font_height

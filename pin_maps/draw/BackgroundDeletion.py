@@ -6,6 +6,14 @@ from PIL import Image, ImageDraw
 from typing import Tuple
 
 class BackgroundDeletion(ImageTransform):
+        """Makes the background of an image transparent.
+
+        Args:
+            px_dist (int, optional): Difference between pixels such that they 
+            are considered the same area. Defaults to 50.
+            replace_val (Tuple[int, int, int, int], optional): The value that 
+            replaces the background. Defaults to (255, 255, 255, 0) (transparency).
+        """
     
     def __init__(self, px_dist: int = 50, replace_val: Tuple[int, int, int, int] = (255, 255, 255, 0)):
         self.px_dist = px_dist
@@ -17,7 +25,6 @@ class BackgroundDeletion(ImageTransform):
 
         Args:
             heraldry (Image.Image): The image from which background should be removed.
-            px_dist (int, optional): Max. pixel distance in the flood fill algorithm. Defaults to 50.
 
         Returns:
             Image.Image: The image with transparent background.

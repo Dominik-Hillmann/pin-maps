@@ -20,7 +20,6 @@ class AddShadow(ImageTransform):
         ell_start: float = 0.9, 
         fill_col: Tuple[int, int, int, int] = (0, 0, 0, 100)
     ):
-
         self.height_change = height_change
         self.ell_start = ell_start
         self.fill_col = fill_col
