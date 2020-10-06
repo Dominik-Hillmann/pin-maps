@@ -25,7 +25,7 @@ class AddShadow(ImageTransform):
         self.fill_col = fill_col
 
     
-    def transform(heraldry: Image.Image) -> Image.Image:
+    def transform(self, heraldry: Image.Image) -> Image.Image:
         """Adds a shadow below the heraldry.
 
         Args:

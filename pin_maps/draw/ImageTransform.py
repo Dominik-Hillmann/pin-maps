@@ -18,6 +18,6 @@ class ImageTransform(ABC):
         """Performs the image change."""
         pass
 
-
+    
     def __call__(self, heraldry: Image.Image) -> Image.Image:
         return self.transform(heraldry)

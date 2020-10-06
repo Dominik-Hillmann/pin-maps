@@ -89,3 +89,35 @@ def test_fail_on_wrong_font_input_format():
     with pytest.raises(SystemExit):
         ParamsParser()
 
+
+### TEXT PARAMETERS ###
+
+def test_empty_standard_texts():
+    sys.argv = [root, '-c', 'de', '-w', 'space']
+    params = ParamsParser()
+    assert params.head_text is None
+    assert params.main_text is None
+
+
+def test_nonempty_texts():
+    body = 'Hello, I am the body text.'
+    header = 'Hello, I am the header text.'
+    sys.argv = [root, '-c', 'de', '-w', 'space', '-b', body, '-s', header]
+    params = ParamsParser()
+    assert params.head_text == header
+    assert params.main_text == body
+
+
+### MARKER SYMBOL PARAMETER ###
+
+def test_standard_marker():
+    sys.argv = [root, '-c', 'de', '-w', 'space']
+    params = ParamsParser()
+    assert params.marker_symbol == 'heraldry'
+
+
+def test_different_marker():
+    sys.argv = [root, '-c', 'de', '-w', 'space', '-m', 'white']
+    params = ParamsParser()
+    assert params.marker_symbol == 'white-shade.png'
+

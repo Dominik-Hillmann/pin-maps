@@ -134,7 +134,7 @@ class ParamsParser:
             try:
                 self.locations.append(Coordinates(location))
             except NameError as e:
-                print(e) # Information about which town name could not be resolved.    
+                print(str(e)) # Information about which town name could not be resolved.    
                 continue
 
     @property
