@@ -27,3 +27,8 @@ def test_background_deletion():
     # Image was visually compared beforehand.
     comparison_img = Image.open(os.path.join('data', 'img', 'test', 'empty.png'))
     assert (np.array(deleted_img) == np.array(comparison_img)).all()
+
+
+@pytest.mark.skip
+def test_ribbon():
+    raise NotImplementedError()

@@ -5,7 +5,7 @@
 from input_parser.ParamsParser import ParamsParser
 from draw.AddShadow import AddShadow
 from draw.BackgroundDeletion import BackgroundDeletion
-# from info_retrieval.Coordinates import Coordinates
+from draw.Ribbon import Ribbon
 from draw.Map import Map
 from draw.Pin import Pin
 # Python libraries
@@ -29,12 +29,13 @@ def main() -> None:
     added_frame_px = 150
     # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
     # germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
-    img_transforms = [BackgroundDeletion(), AddShadow()]
+    ribbon_test_name = 'Ingolstadt'
+    img_transforms = [BackgroundDeletion(), AddShadow()]# , Ribbon(ribbon_test_name)]
     germany = Map('de-neg.shp', 'old-topo.png', [5.7, 15.3, 47.2, 56.2])
     
     for location in params.locations:
         try:
-            pin = Pin(location, params.marker_symbol, img_transforms)
+            pin = Pin(location, params.marker_symbol, img_transforms + [Ribbon(location.name)])
         except (ConnectionRefusedError, LookupError) as e:
             print(f'Had to skip pin at position {str(location)} due to {str(e)}.')
             continue
