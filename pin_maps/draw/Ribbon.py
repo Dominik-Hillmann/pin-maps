@@ -18,20 +18,16 @@ class Ribbon(ImageTransform):
 
     # Endings still need to be put here.
 
-    def __init__(self, town_name: str, font_path: str = None):
+    def __init__(self, town_name: str, font_path: str = None, gap: int = 7, ribbon_height: int = 100):
         self.town_name = town_name
-        # self.font_size = font_size
+        self.gap = gap
+        self.ribbon_height = ribbon_height
 
-        print('Size left', self.segment_left.size, 'Right', self.segment_right.size)
-        
         if font_path is not None:
             self.font_path = font_path
         else:
             self.font_path = self.standard_font_path
         
-        # self.text_dims = self.font.getsize(self.town_name)
-        # print('text size', self.text_dims)
-
     
     def __get_sized_font(self, segment_height: int, eta: int) -> ImageFont.ImageFont:
         goal_height = segment_height - eta
@@ -57,7 +53,6 @@ class Ribbon(ImageTransform):
             max(right_height, left_height, text_ribbon_height)
         )
         complete_img = Image.new('RGBA', complete_dims, color = (0, ) * 4)
-        # For now, only the widths
 
         # ADJUSTMENTS NEED TO BE ATTACHED TO ENDINGS
         left_ending_adjustment = 16
@@ -69,55 +64,64 @@ class Ribbon(ImageTransform):
 
         return complete_img
     
+    
+    def __add_ribbon_to_heraldry(self, ribbon: Image.Image, heraldry: Image.Image) -> Image.Image:
+        # Proportionally resize ribbon to certain height.
+        current_ribbon_w, current_ribbon_h = ribbon.size
+        max_ribbon_w, max_ribbon_h = current_ribbon_w, self.ribbon_height
+        resize_ratio = min(max_ribbon_w / current_ribbon_w, max_ribbon_h / current_ribbon_h)
+        new_ribbon_size = round(resize_ratio * current_ribbon_w), round(resize_ratio * current_ribbon_h)
+        ribbon.thumbnail(new_ribbon_size)
+
+        # Create image with maximum width and height of ribbon and heraldry and a gap.
+        complete_img_h = ribbon.height + self.gap + heraldry.height
+        complete_img_w = max(ribbon.width, heraldry.width)
+        complete_img = Image.new('RGBA', (complete_img_w, complete_img_h), (0, 0, 0, 0))
+        
+        # Paste both images into correct postion.
+        if ribbon.width >= heraldry.width:
+            ribbon_paste_w = 0
+            heraldry_paste_w = round((ribbon.width - heraldry.width) / 2)
+        else:
+            ribbon_paste_w = round((heraldry.width - ribbon.width) / 2)
+            heraldry_paste_w = 0
+
+        ribbon_paste_pos = (ribbon_paste_w, 0)
+        heraldry_paste_pos = (heraldry_paste_w, ribbon.height + self.gap)
+
+        complete_img.paste(ribbon, ribbon_paste_pos)
+        complete_img.paste(heraldry, heraldry_paste_pos)
+
+        return complete_img
+
 
     def transform(self, heraldry: Image.Image) -> Image.Image:
-        # Idee: Keine Fontgröße festlegen lassen, sonder
-        # solange font größe ausprobieren, bis so hoch
-        # wie ribbon minus eta
-
-        # text_width, text_height = self.text_dims
         segment_width, segment_height = self.segment_left.size # Both have same dimensions.
         
         eta = 10 # in px
         font = self.__get_sized_font(segment_height, eta)
         text_width, text_height = font.getsize(self.town_name)
-
+        
+        # Create segments backgrounds.
         num_segs = 1
         while num_segs * segment_width <= text_width:
             num_segs += 1
 
         ribbon_img = Image.new('RGBA', (num_segs * segment_width, segment_height), color = (0, ) * 4)
-        
-        print('text width', text_width, 'num ribbons', num_segs, 'ribbons width', num_segs * segment_width)
         for segment_idx in range(num_segs):
             if segment_idx % 2 == 0:
                 ribbon_img.paste(self.segment_left, (segment_idx * segment_width, 0))
             else:
                 ribbon_img.paste(self.segment_right, (segment_idx * segment_width, 0))
         
+        # Write onto the segments background.
         ribbon_drawer = ImageDraw.Draw(ribbon_img)
         text_pos = (round((segment_width * num_segs - text_width) / 2), round((segment_height - text_height) / 2))
-        # print('Text pos', text_pos)
-        # print('Text width', text_width)
-        # print('segments width', segment_num * segment_width)
         ribbon_drawer.text(text_pos, self.town_name, 'black', font)
         
+        # Attach the rolled ends to the ribbon.
         ribbon_img = self.__attach_ribbon_ends(ribbon_img)
-
-        heraldry_width, heraldry_height = heraldry.size
-        ribbon_width, new_height = round(1.3 * heraldry_width), round(1.2 * heraldry_height)
-        ribbon_img.thumbnail((ribbon_width, ) * 2)
-        ribbon_width, ribbon_height = ribbon_img.size
-
-        ribbon_heraldry = Image.new('RGBA', (ribbon_width, new_height), color = (0, ) * 4)
-        ribbon_heraldry.paste(heraldry, (round((ribbon_width - heraldry_width) / 2), 0))
-        ribbon_heraldry.paste(ribbon_img, (0, new_height - ribbon_height), ribbon_img)
-
-        # ribbon_img.thumbnail((ribbon_width, ribbon_width)) 
-        # heraldry.paste(ribbon_img, (0, 0), ribbon_img)
-        # ribbon_img = Image.new('RGBA', (num_segs * segment_width, segment_height), color = (0, ) * 4)
-        # ribbon_img.save('test.png')
-
-        # return heraldry
+        ribbon_heraldry = self.__add_ribbon_to_heraldry(ribbon_img, heraldry)
+        
         return ribbon_heraldry
 
