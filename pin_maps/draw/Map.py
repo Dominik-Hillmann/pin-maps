@@ -13,13 +13,14 @@ from typing import List, Tuple
 
 class Map:
     """Represents the map on which one can draw.
+    
     Args:
+    -----
         shapefile_name (str): Name of the shapefile.
         background_name (str): Name of the background file.
         extent (List[float]): Extent of the map.
         aspect_ratio (float, optional): Aspect ratio of the map. Defaults to 1.49.
     """
-
     width = 2000
     height = 3000
     dpi = 96
@@ -52,41 +53,29 @@ class Map:
 
 
     def add_pin(self, pin: Pin, lat_width: float = 0.6, shadow_factor: float = 1.35) -> None:
+        """Add a pin to the map.
+
+        Args:
+        -----
+            pin (Pin): The pin you want to add to the map.
+            lat_width (float): The width of the pin itself (not of a ribbon, if given) in degrees. Defaults to 0.6.
+            shadow_factor (float): A rescaling factor for heraldry with a shadow below it.
+        """
         pin_img = pin.img
         width, height = pin_img.size
         pin_arr = np.array(pin_img) / 255.0
         lon, lat = pin.position
-
-
-
-        # WICHTIG: im nachhinein auf Wappen bedingen.
-        # Idee:
-        # Wir messen entlang eines Querschnitts in der Mitte des Bildes
-        # wie hoch der Anteil an Wappen ist.
-        # Dann wird das Bild so hochskaliert, dass der Wappenanteil
-        # der Gesamtbreite des ursprünglichen Bildes entspricht.
-        print(pin_arr.shape)
+       
+        # Find rescaling of width such that heraldry itself (not the ribbon!) is all the same size.
+        # Idea: find out by how much more ribbon in width there is by measuring amount of empty px in width in middle height.
         height, width, channels = pin_arr.shape
-        print(pin_arr[round(0.5 * height), :, :].shape)
-        summed = np.sum(pin_arr[round(0.5 * height), :, :], axis = 1)
-        print(np.sum(summed == 0), len(summed))
-        print(summed == 0)
-        
-        
-        # lat_width ist mit 0.6 Grad gegeben
-        # wir wissen, dass Nichtwappenanteil 0.2 ist
-        # Dreisatz:
-        # ((1 - 0.2) * w_px) entspricht (1 - .2) * lat_width
-        # also durch (1. - .2) * w_px, mal
-        # dann durch w_px, mal ursprünglicher Breite
-        print(lat_width)
-        width_px = len(summed)
-        heraldry_width_ratio = 1.0 - (np.sum(summed == 0) / width_px)
-        print(heraldry_width_ratio)
-        lat_width = lat_width / (heraldry_width_ratio * width_px) * width_px
-        print(lat_width)
+        middle_px_slice = np.sum(pin_arr[round(0.5 * height), :, :], axis = 1)
+        # summed = np.sum(pin_arr[round(0.5 * height), :, :], axis = 1)
+        complete_middle_width = len(middle_px_slice)
+        heraldry_middle_width_ratio = 1.0 - (np.sum(middle_px_slice == 0) / complete_middle_width)
+        lat_width = lat_width / (heraldry_middle_width_ratio * complete_middle_width) * complete_middle_width
 
-        # Repositioning due to different scaling.
+        # Repositioning due to different scaling of the map background and the grid.
         if lon < 49.9:
             lon -= 0.2
         elif lon > 53.5:
@@ -95,12 +84,12 @@ class Map:
         # Calculate height including the shadow below.
         lon_height = lat_width / width * (height / shadow_factor)
         
-        # "Middle out" such that the middle of the image is directly
+        # "Middle out" such that the middle of the image is directly above the location.
         lat_start = lat - 0.5 * lat_width
         lat_end = lat + 0.5 * lat_width
         extent = (lat_start, lat_end, lon, lon + lon_height)
         
-        # Will be drawn in the save method because the list needs order by longitude first.
+        # Add values to list. Actual drawing happens in the save method.
         self.pins.append({
             'img': pin_arr,
             'extent': extent,
@@ -112,10 +101,10 @@ class Map:
         """First, draws list of pins, then saves the file in the output directory.
 
         Args:
-            file_name (str): The name the file will be given in the directory.
+        -----
+            file_name (str): The name the file (file only!). The output directory is hard-coded.
         """
-        
-        # Order pins by longitude, so no shadow is draw on top of other pin.
+        # Order pins by longitude, so no shadow is drawn on top of other pin.
         self.pins.sort(key = lambda pin: pin['lon'])
         self.pins.reverse()
         for pin in self.pins:
