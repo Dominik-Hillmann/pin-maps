@@ -23,19 +23,21 @@ from pprint import pprint
 def main() -> None:
     params = ParamsParser()
     create_output_dir()
-
+    
     height_text_space = 750
     text = u'Inge & Maik-Günter'
     added_frame_px = 150
     # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
     # germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
+    img_transforms = [BackgroundDeletion(), AddShadow()]
     ribbon_test_name = 'Ingolstadt'
-    img_transforms = [BackgroundDeletion(), AddShadow()]# , Ribbon(ribbon_test_name)]
     germany = Map('de-neg.shp', 'old-topo.png', [5.7, 15.3, 47.2, 56.2])
     
     for location in params.locations:
+        specific_transforms = img_transforms + [Ribbon(location.name)] if params.ribbons else img_transforms
+        print('TRANSOFRMS', specific_transforms)
         try:
-            pin = Pin(location, params.marker_symbol, img_transforms + [Ribbon(location.name)])
+            pin = Pin(location, params.marker_symbol, specific_transforms)
         except (ConnectionRefusedError, LookupError) as e:
             print(f'Had to skip pin at position {str(location)} due to {str(e)}.')
             continue

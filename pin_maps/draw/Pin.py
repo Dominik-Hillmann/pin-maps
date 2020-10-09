@@ -97,11 +97,12 @@ class Pin:
 
         img_data = io.BytesIO(img_reply.content)
         heraldry = Image.open(img_data)
-        # heraldry = self.__flood_delete_background(heraldry)
-        # heraldry = self.__add_shadow(heraldry)
+        # Caching before transformation because transformations are not always the same.
+        heraldry.save(os.path.join(self.__pin_cache_path, location_name.lower() + '-pin.png'))
+
         for transform in self.__transforms:
             heraldry = transform(heraldry)
-        heraldry.save(os.path.join(self.__pin_cache_path, location_name.lower() + '-pin.png')) # Caching
+        # heraldry.save(os.path.join(self.__pin_cache_path, location_name.lower() + '-pin.png')) # Caching
 
         return heraldry
 
@@ -124,7 +125,12 @@ class Pin:
         if filename not in cached_pins:
             raise LookupError(f'{location_name} is not yet cached.')
         
-        return Image.open(os.path.join(self.__pin_cache_path, filename))
+        heraldry = Image.open(os.path.join(self.__pin_cache_path, filename))
+        for transform in self.__transforms:
+            heraldry = transform(heraldry)
+        
+        return heraldry
+        # return Image.open(os.path.join(self.__pin_cache_path, filename))
 
 
     @staticmethod

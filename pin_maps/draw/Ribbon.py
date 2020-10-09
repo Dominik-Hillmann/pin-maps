@@ -21,8 +21,15 @@ class Ribbon(ImageTransform):
     ribbon_path = os.path.join('data', 'img', 'ribbons')
     segment_left = Image.open(os.path.join(ribbon_path, 'left-segment.png'))
     segment_right = Image.open(os.path.join(ribbon_path, 'right-segment.png'))
-    left_ending = Image.open(os.path.join(ribbon_path, 'left-end-1.png'))
-    right_ending = Image.open(os.path.join(ribbon_path, 'right-end-1.png'))
+    # left_ending = Image.open(os.path.join(ribbon_path, 'left-end-1.png'))
+    # right_ending = Image.open(os.path.join(ribbon_path, 'right-end-1.png'))
+    
+    # left_ending = Image.open(os.path.join(ribbon_path, 'left-end-2.png'))
+    # right_ending = Image.open(os.path.join(ribbon_path, 'right-end-2.png'))
+
+    left_ending = Image.open(os.path.join(ribbon_path, 'left-end-3.png'))
+    right_ending = Image.open(os.path.join(ribbon_path, 'right-end-3.png'))
+
     # A character which stretches all the way down such that font is properly aligned.
     __cellar_char = 'j'
 
@@ -88,8 +95,14 @@ class Ribbon(ImageTransform):
         complete_img = Image.new('RGBA', complete_dims, color = (0, ) * 4)
 
         # ADJUSTMENTS NEED TO BE ATTACHED TO ENDINGS
-        left_ending_adjustment = 16
-        right_ending_adjustment = -7
+        # left_ending_adjustment = 16
+        # right_ending_adjustment = -7
+
+        # left_ending_adjustment = 17
+        # right_ending_adjustment = -15
+
+        left_ending_adjustment = 15
+        right_ending_adjustment = 0
         complete_img.paste(text_ribbon, (left_width + 1, 20))
         complete_img.paste(self.left_ending, (0 + left_ending_adjustment, 0), self.left_ending)
         complete_img.paste(self.right_ending, (left_width + text_ribbon_width + 1 + right_ending_adjustment, 0), self.right_ending)

@@ -79,6 +79,11 @@ class ParamsParser:
             help = 'A list of the longitudes of the pins. The lists of ' + 
             'latitudes and longitudes need to have the same length.'
         )
+        parser.add_argument(
+            '-r', '--ribbons',
+            action = 'store_true',
+            help = 'Whether ribbons should be added to the pins.'
+        )
 
         self.__parsed_args = vars(parser.parse_args())
         print(self.__parsed_args)
@@ -136,6 +141,9 @@ class ParamsParser:
             except NameError as e:
                 print(str(e)) # Information about which town name could not be resolved.    
                 continue
+
+        # RIBBON
+        self.ribbons = self.__parsed_args['ribbons']
 
     @property
     def marker_symbol(self):
