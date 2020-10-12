@@ -35,10 +35,9 @@ def test_ribbon():
     ribbon = Ribbon('testname', ribbon_choice = 1)
     white_img = Image.new('RGBA', (100, 100), color = (255, ) * 4)
     ribbon_added = ribbon(white_img)
-    ribbon_added.save('test.png')
+    # ribbon_added.save(os.path.join(compare_imgs_path, 'ribbon.png'))
 
     # Visually compared beforehand.
     comparison_img = Image.open(os.path.join(compare_imgs_path, 'ribbon.png'))
     assert (np.array(ribbon_added) == np.array(comparison_img)).all()
-
 

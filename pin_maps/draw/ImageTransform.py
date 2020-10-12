@@ -21,3 +21,4 @@ class ImageTransform(ABC):
     
     def __call__(self, heraldry: Image.Image) -> Image.Image:
         return self.transform(heraldry)
+

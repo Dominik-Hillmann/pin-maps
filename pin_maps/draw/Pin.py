@@ -47,7 +47,6 @@ class Pin:
         Returns:
             Tuple[float, float]: The coordinates.
         """
-
         return self.__location.coords
 
 
@@ -64,7 +63,6 @@ class Pin:
         Returns:
             Image.Image: The heraldry image.
         """
-
         wiki_url = self.__wiki_base_url + location_name.replace(' ', '_')
         reply = requests.get(wiki_url)
         if reply.status_code not in [200, 404]:
@@ -130,11 +128,21 @@ class Pin:
             heraldry = transform(heraldry)
         
         return heraldry
-        # return Image.open(os.path.join(self.__pin_cache_path, filename))
 
 
     @staticmethod
     def __search_heraldry_link(html: str, location_name: str) -> Union[str, None]:
+        """Searches for a link of the image of heraldry.
+
+        Args:
+        -----
+            html (str): The HTML markup which you want to search through.
+            location_name (str): The name of the location for which you search heraldry.
+
+        Returns:
+        --------
+            (Union[str, None]): The link.
+        """
         soup = BeautifulSoup(html, 'html.parser')
         
         heraldry_url = None
@@ -153,6 +161,16 @@ class Pin:
 
     @staticmethod
     def __search_city_link(html: str) -> Union[str, None]:
+        """Looks for a link to a Wikipeddia page of a city.
+
+        Args:
+        -----
+            html (str): The HTML markup to be searched.
+
+        Returns:
+        --------
+            (Union[str, None]): The link, if the HTML contains one, else None.
+        """
         soup = BeautifulSoup(html, 'html.parser')
         lis = soup.find_all('li')
         for li in lis:

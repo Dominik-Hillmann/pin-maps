@@ -34,7 +34,7 @@ def main() -> None:
     germany = Map('de-neg.shp', 'old-topo.png', [5.7, 15.3, 47.2, 56.2])
     
     for location in params.locations:
-        specific_transforms = img_transforms + [Ribbon(location.name)] if params.ribbons else img_transforms
+        specific_transforms = img_transforms + [Ribbon(location.name, ribbon_choice = 1)] if params.ribbons else img_transforms
         print('TRANSOFRMS', specific_transforms)
         try:
             pin = Pin(location, params.marker_symbol, specific_transforms)
@@ -224,7 +224,7 @@ def write_main_text(
     return img
 
 
-def frame_img(img: Image, added_frame_px: int) -> Image:
+def frame_img(img: Image.Image, added_frame_px: int) -> Image.Image:
     """Puts a uniform frame around the image.
 
     Args:
@@ -241,6 +241,32 @@ def frame_img(img: Image, added_frame_px: int) -> Image:
     framed_img.paste(img, (added_frame_px, ) * 2)
 
     return framed_img
+
+
+def add_header_strokes(
+    img: Image.Image, 
+    header_pos: Tuple[int, int], 
+    header_size: Tuple[int, int],
+    gap: int = 100
+) -> Image.Image:
+    """
+    """
+    img_width, _ = img.size
+    header_x, header_y = header_pos
+    header_width, header_height = header_size
+    
+    drawing = ImageDraw.Draw(img)
+    
+    lines_y = header_y + round(height_height / 2)
+    left_line_start = (header_x - gap, lines_y)
+    left_line_end = (gap, lines_y)
+    right_line_start = (header_x + header_width + gap, lines_y)
+    right_line_end = (img_width - gap, lines_y)
+
+    drawing.line((*left_line_start, *left_line_end), fill = 128, width = 10)
+    drawing.line((*right_line_start, *right_line_start), fill = 128, width = 10)
+    
+    return img
 
 
 if __name__ == '__main__':
