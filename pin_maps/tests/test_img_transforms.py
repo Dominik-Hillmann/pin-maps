@@ -39,5 +39,8 @@ def test_ribbon():
 
     # Visually compared beforehand.
     comparison_img = Image.open(os.path.join(compare_imgs_path, 'ribbon.png'))
-    assert (np.array(ribbon_added) == np.array(comparison_img)).all()
+    try:
+        assert (np.array(ribbon_added) == np.array(comparison_img)).all()
+    except AttributeError:
+        raise AssertionError('Images do not have same dimensions.')
 
