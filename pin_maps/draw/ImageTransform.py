@@ -5,9 +5,8 @@ from PIL import Image
 
 
 class ImageTransform(ABC):
-    """Abstract base class for image/pin transformations.
-    The ```transform(self, heraldry: Image.Image) -> Image.Image``` method needs
-    to be implemented."""
+    """Abstract base class for image/pin transformations. The 
+    ```transform(self, heraldry: Image.Image) -> Image.Image``` method needs to be implemented."""
 
     def __init__(self):
         super().__init__()

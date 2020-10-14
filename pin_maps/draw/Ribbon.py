@@ -38,7 +38,14 @@ class Ribbon(ImageTransform):
     __cellar_char = 'j'
 
 
-    def __init__(self, town_name: str, font_path: str = None, gap: int = 7, ribbon_height: int = 100, ribbon_choice: int = None):
+    def __init__(
+        self, 
+        town_name: str, 
+        font_path: str = None, 
+        gap: int = 7, 
+        ribbon_height: int = 100, 
+        ribbon_choice: int = None
+    ):
         self.town_name = town_name[0].capitalize() + town_name[1:]
         self.gap = gap
         self.ribbon_height = ribbon_height
