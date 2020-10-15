@@ -5,10 +5,11 @@ import random
 from draw.ImageTransform import ImageTransform
 # External modules
 from PIL import Image, ImageFont, ImageDraw
-
+# Typing
+from typing import Union
 
 class Ribbon(ImageTransform):
-    """Creates a ribbon with the city's name at the bottom of the image.
+    """Creates a ribbon with the city's name written on it.
     
     Args:
     -----
@@ -17,21 +18,20 @@ class Ribbon(ImageTransform):
         gap (int): Gap between heraldry and ribbon in pixels. Defaults to 7.
         ribbon_height (int): Height of the ribbon in pixels. Defaults to 100.
     """
-   
     __standard_font_path = os.path.join('data', 'fonts', 'grandhotel.ttf')
     __ribbon_path = os.path.join('data', 'img', 'ribbons')
 
     __segment_left = Image.open(os.path.join(__ribbon_path, 'left-segment.png'))
     __segment_right = Image.open(os.path.join(__ribbon_path, 'right-segment.png'))
     __left_end_choices = [
-        (Image.open(os.path.join(__ribbon_path, 'left-end-1.png')), 40, 20),
-        (Image.open(os.path.join(__ribbon_path, 'left-end-2.png')), 17, 0),
-        (Image.open(os.path.join(__ribbon_path, 'left-end-3.png')), 15, 0)
+        (Image.open(os.path.join(__ribbon_path, 'left-end-1.png')), -12, 40),
+        (Image.open(os.path.join(__ribbon_path, 'left-end-2.png')), -24, 30),
+        (Image.open(os.path.join(__ribbon_path, 'left-end-3.png')), -47, 33)
     ] 
     __right_end_choices = [
-        (Image.open(os.path.join(__ribbon_path, 'right-end-1.png')), -40, 0),
-        (Image.open(os.path.join(__ribbon_path, 'right-end-2.png')), -15, 0),
-        (Image.open(os.path.join(__ribbon_path, 'right-end-3.png')), -22, 0)
+        (Image.open(os.path.join(__ribbon_path, 'right-end-1.png')), 17, -20),
+        (Image.open(os.path.join(__ribbon_path, 'right-end-2.png')), 18, -21),
+        (Image.open(os.path.join(__ribbon_path, 'right-end-3.png')), 20, -22)
     ]
 
     # A character which stretches all the way down such that font is properly aligned.
@@ -44,11 +44,11 @@ class Ribbon(ImageTransform):
         font_path: str = None, 
         gap: int = 7, 
         ribbon_height: int = 100, 
-        ribbon_choice: int = None
+        ribbon_choice: Union[None, int] = None
     ):
         self.town_name = town_name[0].capitalize() + town_name[1:]
-        self.gap = gap
-        self.ribbon_height = ribbon_height
+        self.__gap = gap
+        self.__ribbon_height = ribbon_height
 
         if ribbon_choice is not None:
             self.__left_end, self.__left_adjust_vert, self.__left_adjust_hori = self.__left_end_choices[ribbon_choice - 1]
@@ -104,25 +104,39 @@ class Ribbon(ImageTransform):
         right_width, right_height = self.__right_end.size
         left_width, left_height = self.__left_end.size
         text_ribbon_width, text_ribbon_height = text_ribbon.size
+        # +++
+        # +++
+        # ++#----------##+
+        # ++#----------##+
+        # ++#----------##+
+        #              +++
+        #              +++
+        # Komplette Höhe: Überstand links + ribbon_height + Überstand rechts
+        # Komplette Breite: analog
+        # links: (0, 0)
+        # Mitte: (Höhenüberstand links, Breitenüberstand links)
+        # rechts: (Breitenüberstand links + Breite Mitte - adjustment)
 
         complete_dims = (
-            right_width + left_width + text_ribbon_width, 
-            max(right_height, left_height, text_ribbon_height)
+            abs(self.__left_adjust_hori) + text_ribbon_width + abs(self.__right_adjust_hori),
+            abs(self.__left_adjust_vert) + text_ribbon_height + abs(self.__right_adjust_hori)
         )
-        complete_img = Image.new('RGBA', complete_dims, color = (0, ) * 4)
+        complete_img = Image.new('RGBA', complete_dims, color = (255, 0, 0, 100))
+        
+        text_ribbon_pos = (abs(self.__left_adjust_vert), abs(self.__left_adjust_hori))
+        complete_img.paste(text_ribbon, text_ribbon_pos)
 
-        complete_img.paste(text_ribbon, (left_width, 20))
-        complete_img.paste(
-            self.__left_end, 
-            (self.__left_adjust_hori, self.__left_adjust_hori), 
-            self.__left_end
-        )
-        complete_img.paste(
-            self.__right_end,
-            (left_width + text_ribbon_width + self.__right_adjust_hori, self.__right_adjust_vert), 
-            self.__right_end
-        )
-        complete_img = complete_img.crop((self.__left_adjust_hori, 0, complete_dims[0] + self.__right_adjust_hori, complete_dims[1]))
+        left_pos = (0, 0)
+        complete_img.paste(self.__left_end, left_pos, self.__left_end)
+        #left_pos = (self.__left_adjust_hori, self.__left_adjust_vert)
+        #complete_img.paste(self.__left_end, left_pos, self.__left_end)
+
+        #complete_img.paste(
+        #    self.__right_end,
+        #    (left_width + text_ribbon_width + self.__right_adjust_hori, self.__right_adjust_vert), 
+        #    self.__right_end
+        #)
+        #complete_img = complete_img.crop((self.__left_adjust_hori, 0, complete_dims[0] + self.__right_adjust_hori, complete_dims[1]))
 
         return complete_img
     
@@ -141,13 +155,13 @@ class Ribbon(ImageTransform):
         """
         # Proportionally resize ribbon to certain height.
         current_ribbon_w, current_ribbon_h = ribbon.size
-        max_ribbon_w, max_ribbon_h = current_ribbon_w, self.ribbon_height
+        max_ribbon_w, max_ribbon_h = current_ribbon_w, self.__ribbon_height
         resize_ratio = min(max_ribbon_w / current_ribbon_w, max_ribbon_h / current_ribbon_h)
         new_ribbon_size = round(resize_ratio * current_ribbon_w), round(resize_ratio * current_ribbon_h)
         ribbon.thumbnail(new_ribbon_size)
 
         # Create image with maximum width and height of ribbon and heraldry and a gap.
-        complete_img_h = ribbon.height + self.gap + heraldry.height
+        complete_img_h = ribbon.height + self.__gap + heraldry.height
         complete_img_w = max(ribbon.width, heraldry.width)
         complete_img = Image.new('RGBA', (complete_img_w, complete_img_h), (0, 0, 0, 0))
         
@@ -160,7 +174,7 @@ class Ribbon(ImageTransform):
             heraldry_paste_w = 0
 
         ribbon_paste_pos = (ribbon_paste_w, 0)
-        heraldry_paste_pos = (heraldry_paste_w, ribbon.height + self.gap)
+        heraldry_paste_pos = (heraldry_paste_w, ribbon.height + self.__gap)
 
         complete_img.paste(ribbon, ribbon_paste_pos)
         complete_img.paste(heraldry, heraldry_paste_pos)
