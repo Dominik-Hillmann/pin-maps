@@ -23,15 +23,16 @@ class Ribbon(ImageTransform):
 
     __segment_left = Image.open(os.path.join(__ribbon_path, 'left-segment.png'))
     __segment_right = Image.open(os.path.join(__ribbon_path, 'right-segment.png'))
+    # (ribbon ending, adjustment along x dimension, adjustment along y dimension)
     __left_end_choices = [
-        (Image.open(os.path.join(__ribbon_path, 'left-end-1.png')), -12, 40),
-        (Image.open(os.path.join(__ribbon_path, 'left-end-2.png')), -24, 30),
-        (Image.open(os.path.join(__ribbon_path, 'left-end-3.png')), -47, 33)
+        (Image.open(os.path.join(__ribbon_path, 'left-end-1.png')), 29, 31),
+        (Image.open(os.path.join(__ribbon_path, 'left-end-2.png')), 65, 46),
+        (Image.open(os.path.join(__ribbon_path, 'left-end-3.png')), 67, 67)
     ] 
     __right_end_choices = [
-        (Image.open(os.path.join(__ribbon_path, 'right-end-1.png')), 17, -20),
-        (Image.open(os.path.join(__ribbon_path, 'right-end-2.png')), 18, -21),
-        (Image.open(os.path.join(__ribbon_path, 'right-end-3.png')), 20, -22)
+        (Image.open(os.path.join(__ribbon_path, 'right-end-1.png')), -22, 33),
+        (Image.open(os.path.join(__ribbon_path, 'right-end-2.png')), -30, 43),
+        (Image.open(os.path.join(__ribbon_path, 'right-end-3.png')), -40, 70)
     ]
 
     # A character which stretches all the way down such that font is properly aligned.
@@ -51,16 +52,16 @@ class Ribbon(ImageTransform):
         self.__ribbon_height = ribbon_height
 
         if ribbon_choice is not None:
-            self.__left_end, self.__left_adjust_vert, self.__left_adjust_hori = self.__left_end_choices[ribbon_choice - 1]
-            self.__right_end, self.__right_adjust_vert, self.__right_adjust_hori = self.__right_end_choices[ribbon_choice - 1]
+            self.__left_end, self.__left_adjust_x, self.__left_adjust_y = self.__left_end_choices[ribbon_choice - 1]
+            self.__right_end, self.__right_adjust_x, self.__right_adjust_y = self.__right_end_choices[ribbon_choice - 1]
         else:
-            self.__left_end, self.__left_adjust_vert, self.__left_adjust_hori = random.choice(self.__left_end_choices)
-            self.__right_end, self.__right_adjust_vert, self.__right_adjust_hori = random.choice(self.__right_end_choices)
+            self.__left_end, self.__left_adjust_x, self.__left_adjust_y = random.choice(self.__left_end_choices)
+            self.__right_end, self.__right_adjust_x, self.__right_adjust_y = random.choice(self.__right_end_choices)
 
         if font_path is not None:
-            self.font_path = font_path
+            self.__font_path = font_path
         else:
-            self.font_path = self.__standard_font_path
+            self.__font_path = self.__standard_font_path
         
     
     def __get_sized_font(self, segment_height: int, eta: int) -> ImageFont.ImageFont:
@@ -79,17 +80,17 @@ class Ribbon(ImageTransform):
         text = self.town_name + self.__cellar_char
         
         font_size = 500
-        current_font = ImageFont.truetype(self.font_path, font_size)
+        current_font = ImageFont.truetype(self.__font_path, font_size)
         _, current_height = current_font.getsize(text)
         while current_height >= goal_height:
             font_size -= 1
-            current_font = ImageFont.truetype(self.font_path, font_size)
+            current_font = ImageFont.truetype(self.__font_path, font_size)
             _, current_height = current_font.getsize(text)
 
         return current_font
 
     
-    def __attach_ribbon_ends(self, text_ribbon: Image.Image) -> Image.Image:
+    def __attach_ribbon_ends(self, ribbon: Image.Image) -> Image.Image:
         """Attaches to scroll rolling at the left and right end. Chooses randomly
         between alternatives.
         
@@ -103,40 +104,26 @@ class Ribbon(ImageTransform):
         """
         right_width, right_height = self.__right_end.size
         left_width, left_height = self.__left_end.size
-        text_ribbon_width, text_ribbon_height = text_ribbon.size
-        # +++
-        # +++
-        # ++#----------##+
-        # ++#----------##+
-        # ++#----------##+
-        #              +++
-        #              +++
-        # Komplette Höhe: Überstand links + ribbon_height + Überstand rechts
-        # Komplette Breite: analog
-        # links: (0, 0)
-        # Mitte: (Höhenüberstand links, Breitenüberstand links)
-        # rechts: (Breitenüberstand links + Breite Mitte - adjustment)
-
-        complete_dims = (
-            abs(self.__left_adjust_hori) + text_ribbon_width + abs(self.__right_adjust_hori),
-            abs(self.__left_adjust_vert) + text_ribbon_height + abs(self.__right_adjust_hori)
-        )
-        complete_img = Image.new('RGBA', complete_dims, color = (255, 0, 0, 100))
+        ribbon_width, ribbon_height = ribbon.size
         
-        text_ribbon_pos = (abs(self.__left_adjust_vert), abs(self.__left_adjust_hori))
-        complete_img.paste(text_ribbon, text_ribbon_pos)
+        complete_dims = (
+            abs(self.__left_adjust_x) + ribbon_width + self.__right_adjust_x + right_width,
+            abs(self.__left_adjust_y) + ribbon_height + abs(self.__right_adjust_y)
+        )
+        complete_img = Image.new('RGBA', complete_dims, color = (0, ) * 4)
+        
+        ribbon_pos = (self.__left_adjust_x, self.__left_adjust_y)
+        complete_img.paste(ribbon, ribbon_pos)
 
         left_pos = (0, 0)
         complete_img.paste(self.__left_end, left_pos, self.__left_end)
-        #left_pos = (self.__left_adjust_hori, self.__left_adjust_vert)
-        #complete_img.paste(self.__left_end, left_pos, self.__left_end)
 
-        #complete_img.paste(
-        #    self.__right_end,
-        #    (left_width + text_ribbon_width + self.__right_adjust_hori, self.__right_adjust_vert), 
-        #    self.__right_end
-        #)
-        #complete_img = complete_img.crop((self.__left_adjust_hori, 0, complete_dims[0] + self.__right_adjust_hori, complete_dims[1]))
+        print(self.__left_adjust_x, ribbon_width, right_width, self.__right_adjust_x)
+        right_pos = (
+            self.__left_adjust_x + ribbon_width + self.__right_adjust_x, # (right_width - abs(self.__right_adjust_x)), 
+            abs(self.__right_adjust_y)
+        )
+        complete_img.paste(self.__right_end, right_pos, self.__right_end)
 
         return complete_img
     
@@ -209,7 +196,7 @@ class Ribbon(ImageTransform):
         ribbon_drawer = ImageDraw.Draw(ribbon_img)
         text_pos = (
             # Width has to be adjusted for cellar char.
-            round((segment_width * num_segs - (text_width - cellar_width / 2)) / 2), 
+            round((segment_width * num_segs - (text_width - cellar_width / 2)) / 2) - round(cellar_width / 2), 
             round((segment_height - text_height) / 2)
         )
         ribbon_drawer.text(text_pos, self.town_name, 'black', font)
