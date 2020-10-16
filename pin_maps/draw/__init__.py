@@ -1,1 +1,1 @@
-"""Contains classes related to drawing the map."""
+"""Contains classes related to drawing the map or drawing on the map."""

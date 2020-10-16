@@ -36,7 +36,7 @@ class Ribbon(ImageTransform):
     ]
 
     # A character which stretches all the way down such that font is properly aligned.
-    __cellar_char = 'j'
+    _cellar_char = 'j'
 
 
     def __init__(
@@ -59,36 +59,10 @@ class Ribbon(ImageTransform):
             self.__right_end, self.__right_adjust_x, self.__right_adjust_y = random.choice(self.__right_end_choices)
 
         if font_path is not None:
-            self.__font_path = font_path
+            self._font_path = font_path
         else:
-            self.__font_path = self.__standard_font_path
+            self._font_path = self.__standard_font_path
         
-    
-    def __get_sized_font(self, segment_height: int, eta: int) -> ImageFont.ImageFont:
-        """Get a font where the height fits into the ribbon segments.
-
-        Args:
-        -----
-            segment_height (int): Segment height in pixels.
-            eta (int): How much there should be between ribbon and font in pixels.
-
-        Returns:
-        --------
-            ImageFont.ImageFont: The fitting font.
-        """
-        goal_height = segment_height - eta
-        text = self.town_name + self.__cellar_char
-        
-        font_size = 500
-        current_font = ImageFont.truetype(self.__font_path, font_size)
-        _, current_height = current_font.getsize(text)
-        while current_height >= goal_height:
-            font_size -= 1
-            current_font = ImageFont.truetype(self.__font_path, font_size)
-            _, current_height = current_font.getsize(text)
-
-        return current_font
-
     
     def __attach_ribbon_ends(self, ribbon: Image.Image) -> Image.Image:
         """Attaches to scroll rolling at the left and right end. Chooses randomly
@@ -102,8 +76,8 @@ class Ribbon(ImageTransform):
         --------
             Image.Image: The ribbon with both ends attached to it.
         """
-        right_width, right_height = self.__right_end.size
-        left_width, left_height = self.__left_end.size
+        right_width, _ = self.__right_end.size
+        # left_width, left_height = self.__left_end.size
         ribbon_width, ribbon_height = ribbon.size
         
         complete_dims = (
@@ -128,56 +102,15 @@ class Ribbon(ImageTransform):
         return complete_img
     
     
-    def __add_ribbon_to_heraldry(self, ribbon: Image.Image, heraldry: Image.Image) -> Image.Image:
-        """Puts the ribbon into the same image as the heraldry.
-
-        Args:
-        -----
-            ribbon (Image.Image): The ribbon.
-            heraldry (Image.Image): The heraldry.
-
-        Returns:
-        --------
-            (Image.Image): The combined image.
-        """
-        # Proportionally resize ribbon to certain height.
-        current_ribbon_w, current_ribbon_h = ribbon.size
-        max_ribbon_w, max_ribbon_h = current_ribbon_w, self.__ribbon_height
-        resize_ratio = min(max_ribbon_w / current_ribbon_w, max_ribbon_h / current_ribbon_h)
-        new_ribbon_size = round(resize_ratio * current_ribbon_w), round(resize_ratio * current_ribbon_h)
-        ribbon.thumbnail(new_ribbon_size)
-
-        # Create image with maximum width and height of ribbon and heraldry and a gap.
-        complete_img_h = ribbon.height + self.__gap + heraldry.height
-        complete_img_w = max(ribbon.width, heraldry.width)
-        complete_img = Image.new('RGBA', (complete_img_w, complete_img_h), (0, 0, 0, 0))
-        
-        # Paste both images into correct postion.
-        if ribbon.width >= heraldry.width:
-            ribbon_paste_w = 0
-            heraldry_paste_w = round((ribbon.width - heraldry.width) / 2)
-        else:
-            ribbon_paste_w = round((heraldry.width - ribbon.width) / 2)
-            heraldry_paste_w = 0
-
-        ribbon_paste_pos = (ribbon_paste_w, 0)
-        heraldry_paste_pos = (heraldry_paste_w, ribbon.height + self.__gap)
-
-        complete_img.paste(ribbon, ribbon_paste_pos)
-        complete_img.paste(heraldry, heraldry_paste_pos)
-
-        return complete_img
-
-
     # Override from ImageTransform
     def transform(self, heraldry: Image.Image) -> Image.Image:
         segment_width, segment_height = self.__segment_left.size # Both have same dimensions.
         
         eta = 10 # in px
-        font = self.__get_sized_font(segment_height, eta)
+        font = self._get_sized_font(segment_height, eta)
         text_width, _ = font.getsize(self.town_name)
-        _, text_height = font.getsize(self.town_name + self.__cellar_char)
-        cellar_width, _ = font.getsize(self.__cellar_char)
+        _, text_height = font.getsize(self.town_name + self._cellar_char)
+        cellar_width, _ = font.getsize(self._cellar_char)
         
         # Create segments backgrounds.
         num_segs = 1
@@ -203,7 +136,7 @@ class Ribbon(ImageTransform):
         
         # Attach the rolled ends to the ribbon.
         ribbon_img = self.__attach_ribbon_ends(ribbon_img)
-        ribbon_heraldry = self.__add_ribbon_to_heraldry(ribbon_img, heraldry)
+        ribbon_heraldry = self._add_label_to_heraldry(ribbon_img, heraldry, self.__ribbon_height, self.__gap)
         
         return ribbon_heraldry
     

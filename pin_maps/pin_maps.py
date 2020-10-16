@@ -6,6 +6,7 @@ from input_parser.ParamsParser import ParamsParser
 from draw.AddShadow import AddShadow
 from draw.BackgroundDeletion import BackgroundDeletion
 from draw.Ribbon import Ribbon
+from draw.OffsetLettering import OffsetLettering
 from draw.Map import Map
 from draw.Pin import Pin
 # Python libraries
@@ -30,11 +31,11 @@ def main() -> None:
     # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
     # germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
     img_transforms = [BackgroundDeletion(), AddShadow()]
-    ribbon_test_name = 'Ingolstadt'
     germany = Map('de-neg.shp', 'old-topo.png', [5.7, 15.3, 47.2, 56.2])
     
     for location in params.locations:
         specific_transforms = img_transforms + [Ribbon(location.name)] if params.ribbons else img_transforms
+        # specific_transforms = img_transforms + [OffsetLettering(location.name)]
         print('TRANSOFRMS', specific_transforms)
         try:
             pin = Pin(location, params.marker_symbol, specific_transforms)
@@ -124,8 +125,7 @@ def write_header(
     -------
         [type]: [description]
     """
-
-    img_width, img_height = img.size
+    img_width, _ = img.size
     font_size = 500 # Arbitrary but high start value
     font = ImageFont.truetype(font_path, font_size)
     font_width, font_height = font.getsize(text) 
@@ -242,7 +242,7 @@ def frame_img(img: Image.Image, added_frame_px: int) -> Image.Image:
 
     return framed_img
 
-
+'''
 def add_header_strokes(
     img: Image.Image, 
     header_pos: Tuple[int, int], 
@@ -267,7 +267,7 @@ def add_header_strokes(
     drawing.line((*right_line_start, *right_line_start), fill = 128, width = 10)
     
     return img
-
+'''
 
 if __name__ == '__main__':
     main()
