@@ -30,8 +30,8 @@ class OffsetLettering(ImageTransform):
     ):
         super().__init__()
         self.town_name = town_name[0].capitalize() + town_name[1:]
-        self.__foreground_col = 'black' if foreground_col is None else foreground_col
-        self.__background_col = 'white' if background_col is None else background_col
+        self.__foreground_col = 'white' if foreground_col is None else foreground_col
+        self.__background_col = 'red' if background_col is None else background_col
         self.__wanted_height = 80 if height is None else height
         self.__gap = 10 if gap is None else gap
         self._font_path = self.__standard_font_path if font_path is None else font_path
@@ -41,12 +41,14 @@ class OffsetLettering(ImageTransform):
     # Override from ImageTransform
     def transform(self, heraldry: Image.Image) -> Image.Image:
         lettering_dims = self.__font.getsize(self.town_name)
-        spacing = 2
-        lettering_dims = tuple(val + spacing * 3 for val in lettering_dims)
+        spacing = 1
+        num_steps = 10
+
+        lettering_dims = tuple(val + spacing * num_steps for val in lettering_dims)
         lettering = Image.new('RGBA', lettering_dims, (0, ) * 4)
         lettering_drawing = ImageDraw.Draw(lettering)
         
-        for i in [3, 2, 1]:
+        for i in range(num_steps, 0, -1):
             lettering_drawing.text((spacing * i, ) * 2, self.town_name, self.__background_col, self.__font)
         lettering_drawing.text((0, 0), self.town_name, self.__foreground_col, self.__font)
 
