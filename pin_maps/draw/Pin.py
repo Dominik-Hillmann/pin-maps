@@ -17,6 +17,7 @@ class Pin:
     """Represents a pin on the map.
     
     Args:
+    -----
         location (Union[str, Tuple[float, float]]): Location name or position as latitude and longitude.
         symbol_path (str): Path to the image used as a pin.
     """
@@ -45,6 +46,7 @@ class Pin:
         """The coordinates of the pin.
 
         Returns:
+        --------
             Tuple[float, float]: The coordinates.
         """
         return self.__location.coords
@@ -54,13 +56,16 @@ class Pin:
         """Retrieves the location's heraldry frim the Wikipedia.
 
         Args:
+        -----
             location_name (str): The location's name.
 
         Raises:
+        -------
             ConnectionRefusedError: Wikipedia cannot be contacted due to network errors.
             LookupError: The Wikipedia page does not contain a heraldry image.
 
         Returns:
+        --------
             Image.Image: The heraldry image.
         """
         wiki_url = self.__wiki_base_url + location_name.replace(' ', '_')
@@ -109,15 +114,17 @@ class Pin:
         """Retrieves cached heraldry.
 
         Args:
+        -----
             location_name (str): The location's name.
 
         Raises:
+        -------
             LookupError: If the heraldry is not yet cached.
 
         Returns:
+        --------
             Image.Image: The heraldry image.
         """
-
         cached_pins = os.listdir(self.__pin_cache_path)
         filename = f'{location_name.lower()}-pin.png'
         if filename not in cached_pins:
@@ -182,7 +189,11 @@ class Pin:
         
 
     def __str__(self):
-        return 'Pin(symbol=' + self.__symbol_path + ', loc=' + str(tuple(self.location)) + ')'
+        return f'Pin(symbol={self.__symbol_path}, loc={str(tuple(self.location))})'
+
+
+    def __repr__(self):
+        return str(self)
 
     
     def __iter__(self):
