@@ -107,7 +107,7 @@ class Ribbon(ImageTransform):
     def transform(self, heraldry: Image.Image) -> Image.Image:
         segment_width, segment_height = self.__segment_left.size # Both have same dimensions.
         
-        eta = 10 # in px
+        eta = 15 # in px
         font = self._get_sized_font(segment_height, eta)
         text_width, _ = font.getsize(self.town_name)
         _, text_height = font.getsize(self.town_name + self._cellar_char)
@@ -117,7 +117,7 @@ class Ribbon(ImageTransform):
         num_segs = 1
         while num_segs * segment_width <= text_width:
             num_segs += 1
-        num_segs += 2 # To provide enough space for the ribbon ends.
+        num_segs += 4 # To provide enough space for the ribbon ends.
 
         ribbon_img = Image.new('RGBA', (num_segs * segment_width, segment_height), color = (0, ) * 4)
         for segment_idx in range(num_segs):
