@@ -34,8 +34,8 @@ def main() -> None:
     germany = Map('de-neg.shp', 'old-topo.png', [5.7, 15.3, 47.2, 56.2])
     
     for location in params.locations:
-        # specific_transforms = img_transforms + [Ribbon(location.name)] if params.ribbons else img_transforms
-        specific_transforms = img_transforms + [OffsetLettering(location.name)]
+        specific_transforms = img_transforms + [Ribbon(location.name)] if params.ribbons else img_transforms
+        # specific_transforms = img_transforms + [OffsetLettering(location.name)]
         print('TRANSOFRMS', specific_transforms)
         try:
             pin = Pin(location, params.marker_symbol, specific_transforms)

@@ -18,14 +18,14 @@ class Ribbon(ImageTransform):
         gap (int): Gap between heraldry and ribbon in pixels. Defaults to 7.
         ribbon_height (int): Height of the ribbon in pixels. Defaults to 100.
     """
-    __standard_font_path = os.path.join('data', 'fonts', 'grandhotel.ttf')
+    __standard_font_path = os.path.join('data', 'fonts', 'fraktur-modern.ttf')
     __ribbon_path = os.path.join('data', 'img', 'ribbons')
 
     __segment_left = Image.open(os.path.join(__ribbon_path, 'left-segment.png'))
     __segment_right = Image.open(os.path.join(__ribbon_path, 'right-segment.png'))
     # (ribbon ending, adjustment along x dimension, adjustment along y dimension)
     __left_end_choices = [
-        (Image.open(os.path.join(__ribbon_path, 'left-end-1.png')), 29, 31),
+        (Image.open(os.path.join(__ribbon_path, 'left-end-1.png')), 45, 31),#29, 31),
         (Image.open(os.path.join(__ribbon_path, 'left-end-2.png')), 65, 46),
         (Image.open(os.path.join(__ribbon_path, 'left-end-3.png')), 67, 67)
     ] 
@@ -92,10 +92,11 @@ class Ribbon(ImageTransform):
         left_pos = (0, 0)
         complete_img.paste(self.__left_end, left_pos, self.__left_end)
 
-        print(self.__left_adjust_x, ribbon_width, right_width, self.__right_adjust_x)
+        # print(self.__left_adjust_x, ribbon_width, right_width, self.__right_adjust_x)
         right_pos = (
             self.__left_adjust_x + ribbon_width + self.__right_adjust_x, # (right_width - abs(self.__right_adjust_x)), 
-            abs(self.__right_adjust_y)
+            # abs(self.__right_adjust_y)
+            abs(self.__left_adjust_y)
         )
         complete_img.paste(self.__right_end, right_pos, self.__right_end)
 
