@@ -89,6 +89,11 @@ class ParamsParser:
             action = 'store_true',
             help = 'Whether heraldry should be displayed in the text below.'
         )
+        parser.add_argument(
+            '--noborder',
+            action = 'store_true',
+            help = 'Whether a thin border will surround the image and the text.'
+        )
 
         self.__parsed_args = vars(parser.parse_args())
         print(self.__parsed_args)
@@ -149,9 +154,10 @@ class ParamsParser:
 
         # RIBBON
         self.ribbons = self.__parsed_args['ribbons']
-        
         # TEXT COATS
         self.text_coats = not self.__parsed_args['notextcoats']
+        # BORDER
+        self.border_wanted = not self.__parsed_args['noborder']
 
     @property
     def marker_symbol(self):

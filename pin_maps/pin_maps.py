@@ -76,8 +76,7 @@ def main() -> None:
             font_height
         )
 
-
-    framed_img = frame_img(img_new, added_frame_px)
+    framed_img = frame_img(img_new, added_frame_px, params.border_wanted)
     framed_img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
 
 town_name_format = lambda word: word.lower().strip('.?,!:;-%()"\'$€/')
@@ -327,7 +326,12 @@ def write_main_text(
     return img
 
 
-def frame_img(img: Image.Image, added_frame_px: int) -> Image.Image:
+def frame_img(
+    img: Image.Image, 
+    added_frame_px: int, 
+    border_wanted: bool, 
+    border_thickness: int = 3
+) -> Image.Image:
     """Puts a uniform frame around the image.
 
     Args:
@@ -337,40 +341,24 @@ def frame_img(img: Image.Image, added_frame_px: int) -> Image.Image:
     Returns:
         Image: [description]
     """
-
-    width, height = img.size
-    frame_dims = (width + added_frame_px * 2, height + added_frame_px * 2)
+    orig_width, orig_height = img.size
+    frame_dims = (orig_width + added_frame_px * 2, orig_height + added_frame_px * 2)
     framed_img = Image.new(img.mode, frame_dims, (255, ) * 3)
     framed_img.paste(img, (added_frame_px, ) * 2)
+    
+    if border_wanted:
+        half_frame_px = round(added_frame_px / 2)
+        upper_left_corner = (half_frame_px, ) * 2
+        upper_right_corner = (3 * half_frame_px + orig_width, half_frame_px)
+        lower_left_corner = (half_frame_px, 3 * half_frame_px + orig_height)
+        lower_right_corner = (3 * half_frame_px + orig_width, 3 * half_frame_px + orig_height)
+        shape = [upper_left_corner, upper_right_corner, lower_right_corner, lower_left_corner, upper_left_corner]
 
+        drawing = ImageDraw.Draw(framed_img)
+        drawing.line(shape, width = border_thickness, fill = 'black')
+    
     return framed_img
 
-'''
-def add_header_strokes(
-    img: Image.Image, 
-    header_pos: Tuple[int, int], 
-    header_size: Tuple[int, int],
-    gap: int = 100
-) -> Image.Image:
-    """
-    """
-    img_width, _ = img.size
-    header_x, header_y = header_pos
-    header_width, header_height = header_size
-    
-    drawing = ImageDraw.Draw(img)
-    
-    lines_y = header_y + round(height_height / 2)
-    left_line_start = (header_x - gap, lines_y)
-    left_line_end = (gap, lines_y)
-    right_line_start = (header_x + header_width + gap, lines_y)
-    right_line_end = (img_width - gap, lines_y)
-
-    drawing.line((*left_line_start, *left_line_end), fill = 128, width = 10)
-    drawing.line((*right_line_start, *right_line_start), fill = 128, width = 10)
-    
-    return img
-'''
 
 if __name__ == '__main__':
     logging.warn('Ich starte.')
