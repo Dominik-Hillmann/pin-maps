@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Create maps with pins and make them beautiful."""
+"""This program designs posters with pins on a map and undertitles."""
 
 # Internal modules
 from input_parser.ParamsParser import ParamsParser
@@ -13,10 +13,11 @@ from draw.Pin import Pin
 import os
 from copy import deepcopy
 from time import time
+import logging
 # External modules
 from PIL import Image, ImageDraw, ImageFont
 # Typing
-from typing import List, Tuple
+from typing import List, Tuple, Union
 # Dev
 from pprint import pprint
 
@@ -51,93 +52,81 @@ def main() -> None:
     img_new, (width_cropped, height_cropped) = crop_add_text_space(raw_img_name, cropping, height_text_space)
     draw, font_height = write_header(img_new, params.head_font_path, text, height_cropped, added_frame_px)
    
-    t = 'München und Nürnberg sind in Bayern und das ist ein sehr langer Testtext. Hallo, Wolfsburg ist eine Stadt. Ping ping pong ping ping pong Wanzleben.'
-    '''img_new = write_main_text(
-        img_new,
-        t,
-        params.main_font_path, 
-        70,
-        height_cropped,
-        added_frame_px,
-        font_height
-    )'''
-    test_text_heraldry(
-        t, 
-        img_new, 
-        ImageFont.truetype(params.main_font_path, 70),
-        70,
-        30,
-        [location.name.lower() for location in params.locations],
-        height_cropped,
-        added_frame_px,
-    )
+    t = 'München und Nürnberg sind in Bayern. Hallo, Wolfsburg ist ein Dresden. Ping ping pong ping ping pong Halle.'
+    if params.text_coats:
+        write_main_text_with_heraldry(
+            t, 
+            img_new, 
+            ImageFont.truetype(params.main_font_path, 70),
+            70,
+            30,
+            [location.name.lower() for location in params.locations],
+            height_cropped,
+            added_frame_px,
+            font_height # Meaning the height of the main title, stupid variable naming!
+        )
+    else:
+        write_main_text(
+            img_new,
+            t,
+            params.main_font_path, 
+            70,
+            height_cropped,
+            added_frame_px,
+            font_height
+        )
+
 
     framed_img = frame_img(img_new, added_frame_px)
     framed_img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
 
 town_name_format = lambda word: word.lower().strip('.?,!:;-%()"\'$€/')
 
-def test_text_heraldry(
-    text,
-    img,
-    font,
-    font_size,
-    line_spacing,
-    town_names,
-    height_cropped,
-    added_frame_px,
+def write_main_text_with_heraldry(
+    text: str,
+    img: Image.Image,
+    font: ImageFont.ImageFont,
+    font_size: int,
+    line_spacing: int,
+    town_names: List[str],
+    height_cropped: int,
+    added_frame_px: int,
+    height_heading: int,
+    coat_text_gap: int = 15
 ):
-    print()
-    print(town_names)
-    print()
     _, font_height = font.getsize('Tg')
-    start_y = height_cropped + added_frame_px + font_height + line_spacing
-
-    for start_x, line in pattern_2nd_text(text, img.width, font, font_size, line_spacing):
-        words = line.split(' ')
-        town_name_split = [(False, [])]
-        for word in words:
-            n_splits = len(town_name_split)
-            if town_name_format(word) in town_names:
-                town_name_split.append((True, [word]))
-            else:
-                town_name_split[n_splits - 1][1].append(word)
-
-        if town_name_split[0] == (False, []):
-            town_name_split = town_name_split[1:]
-
-        # town_name_split = [(partition[0], ' '.join(partition[1])) for partition in town_name_split]
-
-        printing = []
-        for coat_wanted, words in town_name_split:
-            if coat_wanted:
-                printing.append(get_coat_from_cache(town_name_format(words[0])))
-            printing.append(' '.join(words))
-
-        print(printing, [type(x) is str for x in printing])
-        
+    start_y = height_cropped + added_frame_px + height_heading + line_spacing
+    for start_x, line_pattern in pattern_2nd_text_with_coats(text, img, font, font_size, line_spacing, town_names):
+        line = compile_to_line(line_pattern)
         drawing = ImageDraw.Draw(img)
-        for print_ele in printing:
-            if type(print_ele) is str:
-                drawing.text((start_x, start_y), print_ele, font = font, fill = 'black')
-                w, _ = font.getsize(print_ele)
-                start_x += w
+        
+        for i, line_element in enumerate(line):
+            if type(line_element) is str:
+                drawing.text((start_x, start_y), line_element, font = font, fill = 'black')
+                element_width, _ = font.getsize(line_element)
+                start_x += element_width
             else:
-                coat_w, coat_h = proportional_size(font_height, print_ele)
-                print_ele.thumbnail((coat_w, coat_h))
-                img.paste(print_ele, (start_x, start_y))
-                start_x += coat_w
+                start_x += coat_text_gap if not i == 0 else 0
+
+                element_width, element_height = proportional_size(font_height, line_element)
+                line_element.thumbnail((element_width, element_height))
+                img.paste(line_element, (start_x, start_y), line_element)
+                
+                start_x += element_width + coat_text_gap
 
         start_y += font_height + line_spacing
+
 
 def get_coat_from_cache(town_name):
     return Image.open(os.path.join('data', 'img', 'pin-cache', f'{town_name}-pin.png'))
 
+
 def proportional_size(set_height, img) -> Tuple[int, int]:
     current_w, current_h = img.size
-    max_w, max_h = current_w, current_h,
+    max_w, max_h = current_w, set_height,
     resize_ratio = min(max_w / current_w, max_h/ current_h)
     return (round(resize_ratio * current_w), round(resize_ratio * current_h))
+
 
 def create_output_dir() -> None:
     """Creates a new output directory, if there is none."""
@@ -254,6 +243,48 @@ def pattern_2nd_text(
     return list(zip(starts, lines))
 
 
+def town_formatting(town_name):
+    return town_name.lower().strip('.?,!:;-%()"\'$€/')
+
+
+def pattern_2nd_text_with_coats(
+    text: str,
+    img: Image.Image,
+    font: ImageFont.ImageFont,
+    font_size: int,
+    line_spacing: int,
+    town_names: List[str],
+    coats_width: int = 150
+) -> List[Tuple[bool, List[str]]]:
+    pattern = []
+    for start_x, line in pattern_2nd_text(text, img.width - coats_width, font, font_size, line_spacing):
+        words = line.split(' ')
+        line_pattern = [(False, [])]
+
+        for word in words:
+            n_splits = len(line_pattern)
+            if town_formatting(word) in town_names:
+                line_pattern.append((True, [word]))
+            else:
+                line_pattern[n_splits - 1][1].append(word)
+        
+        if line_pattern[0] == (False, []):
+            line_pattern = line_pattern[1:]
+        pattern.append((start_x, line_pattern))
+
+    return pattern
+
+
+def compile_to_line(line_pattern: List[Tuple[bool, List[str]]]) -> List[Union[Image.Image, str]]:
+    written_line = []
+    for coat_wanted, words in line_pattern:
+        if coat_wanted:
+            written_line.append(get_coat_from_cache(town_formatting(words[0])))
+        written_line.append(' '.join(words))
+
+    return written_line
+
+
 def write_main_text(
     img: Image,
     text: str, 
@@ -342,5 +373,7 @@ def add_header_strokes(
 '''
 
 if __name__ == '__main__':
+    logging.warn('Ich starte.')
     main()
+    logging.critical('Ich beende.')
     

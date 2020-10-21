@@ -80,9 +80,14 @@ class ParamsParser:
             'latitudes and longitudes need to have the same length.'
         )
         parser.add_argument(
-            '-r', '--ribbons',
+            '--ribbons',
             action = 'store_true',
             help = 'Whether ribbons should be added to the pins.'
+        )
+        parser.add_argument(
+            '--notextcoats',
+            action = 'store_true',
+            help = 'Whether heraldry should be displayed in the text below.'
         )
 
         self.__parsed_args = vars(parser.parse_args())
@@ -144,6 +149,9 @@ class ParamsParser:
 
         # RIBBON
         self.ribbons = self.__parsed_args['ribbons']
+        
+        # TEXT COATS
+        self.text_coats = not self.__parsed_args['notextcoats']
 
     @property
     def marker_symbol(self):
