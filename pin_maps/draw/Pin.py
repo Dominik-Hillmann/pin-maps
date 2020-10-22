@@ -7,9 +7,7 @@ from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw
 # Internal modules
 from input_parser.Coordinates import Coordinates
-from draw.ImageTransform import ImageTransform
-from draw.AddShadow import AddShadow
-from draw.BackgroundDeletion import BackgroundDeletion
+from transforms.ImageTransform import ImageTransform
 # Typing
 from typing import Union, Tuple, List
 

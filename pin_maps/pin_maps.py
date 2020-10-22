@@ -3,10 +3,10 @@
 
 # Internal modules
 from input_parser.ParamsParser import ParamsParser
-from draw.AddShadow import AddShadow
-from draw.BackgroundDeletion import BackgroundDeletion
-from draw.Ribbon import Ribbon
-from draw.OffsetLettering import OffsetLettering
+from transforms.AddShadow import AddShadow
+from transforms.BackgroundDeletion import BackgroundDeletion
+from transforms.Ribbon import Ribbon
+from transforms.OffsetLettering import OffsetLettering
 from draw.Map import Map
 from draw.Pin import Pin
 # Python libraries
