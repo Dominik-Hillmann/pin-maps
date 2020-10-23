@@ -14,13 +14,15 @@ import os
 from copy import deepcopy
 from time import time
 import logging
+import random
 # External modules
 from PIL import Image, ImageDraw, ImageFont
 # Typing
 from typing import List, Tuple, Union
 # Dev
 from pprint import pprint
-
+# Settings
+random.seed(69)
 
 def main() -> None:
     params = ParamsParser()

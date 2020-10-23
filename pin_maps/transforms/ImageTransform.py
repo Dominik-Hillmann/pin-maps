@@ -48,7 +48,7 @@ class ImageTransform(ABC):
     def _add_label_to_heraldry(
         label: Image.Image, 
         heraldry: Image.Image,
-        label_height: int,
+        wanted_label_height: int,
         gap: int
     ) -> Image.Image:
         """Puts the `label` into the same image as the `heraldry`.
@@ -57,7 +57,7 @@ class ImageTransform(ABC):
         -----
             label (Image.Image): The label image.
             heraldry (Image.Image): The heraldry.
-            label_height (int): The height of the label in pixels.
+            wanted_label_height (int): The height of the label in pixels that is wanted in the final image.
             gap (int): The distance between the label and the heraldry in pixels.
 
         Returns:
@@ -66,7 +66,7 @@ class ImageTransform(ABC):
         """
         # Proportionally resize label to certain height.
         current_label_w, current_label_h = label.size
-        max_label_w, max_label_h = current_label_w, label_height
+        max_label_w, max_label_h = current_label_w, wanted_label_height
         resize_ratio = min(max_label_w / current_label_w, max_label_h / current_label_h)
         new_label_size = (round(resize_ratio * current_label_w), round(resize_ratio * current_label_h))
         label.thumbnail(new_label_size)

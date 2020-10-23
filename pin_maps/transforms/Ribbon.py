@@ -25,7 +25,7 @@ class Ribbon(ImageTransform):
     __segment_right = Image.open(os.path.join(__ribbon_path, 'right-segment.png'))
     # (ribbon ending, adjustment along x dimension, adjustment along y dimension)
     __left_end_choices = [
-        (Image.open(os.path.join(__ribbon_path, 'left-end-1.png')), 45, 31),#29, 31),
+        (Image.open(os.path.join(__ribbon_path, 'left-end-1.png')), 45, 31),
         (Image.open(os.path.join(__ribbon_path, 'left-end-2.png')), 65, 46),
         (Image.open(os.path.join(__ribbon_path, 'left-end-3.png')), 67, 67)
     ] 
@@ -45,7 +45,7 @@ class Ribbon(ImageTransform):
         font_path: str = None, 
         gap: int = 7, 
         ribbon_height: int = 100, 
-        ribbon_choice: Union[None, int] = None
+        ribbon_choice: Union[None, int] = None # For debugging.
     ):
         self.town_name = town_name[0].capitalize() + town_name[1:]
         self.__gap = gap
@@ -77,25 +77,22 @@ class Ribbon(ImageTransform):
             Image.Image: The ribbon with both ends attached to it.
         """
         right_width, _ = self.__right_end.size
-        # left_width, left_height = self.__left_end.size
         ribbon_width, ribbon_height = ribbon.size
         
+        # Dimensions of the final image.
         complete_dims = (
             abs(self.__left_adjust_x) + ribbon_width + self.__right_adjust_x + right_width,
             abs(self.__left_adjust_y) + ribbon_height + abs(self.__right_adjust_y)
         )
         complete_img = Image.new('RGBA', complete_dims, color = (0, ) * 4)
-        
+        # Paste the ribbon itself into final image.
         ribbon_pos = (self.__left_adjust_x, self.__left_adjust_y)
         complete_img.paste(ribbon, ribbon_pos)
-
-        left_pos = (0, 0)
-        complete_img.paste(self.__left_end, left_pos, self.__left_end)
-
-        # print(self.__left_adjust_x, ribbon_width, right_width, self.__right_adjust_x)
+        # Paste the left ribbon end into the final image.
+        complete_img.paste(self.__left_end, (0, 0), self.__left_end)
+        # Paste the right ribbon end into the final image.
         right_pos = (
-            self.__left_adjust_x + ribbon_width + self.__right_adjust_x, # (right_width - abs(self.__right_adjust_x)), 
-            # abs(self.__right_adjust_y)
+            self.__left_adjust_x + ribbon_width + self.__right_adjust_x, 
             abs(self.__left_adjust_y)
         )
         complete_img.paste(self.__right_end, right_pos, self.__right_end)
@@ -135,9 +132,12 @@ class Ribbon(ImageTransform):
         )
         ribbon_drawer.text(text_pos, self.town_name, 'black', font)
         
-        # Attach the rolled ends to the ribbon.
         ribbon_img = self.__attach_ribbon_ends(ribbon_img)
-        ribbon_heraldry = self._add_label_to_heraldry(ribbon_img, heraldry, self.__ribbon_height, self.__gap)
+        # We want the middle part of all ribbons to be the same height, not the complete ribbon including the ends.        
+        prop_ribbon_of_label = segment_height / ribbon_img.height
+        print(prop_ribbon_of_label)
+        wanted_height = self.__ribbon_height #round(self.__ribbon_height / prop_ribbon_of_label) 
+        ribbon_heraldry = self._add_label_to_heraldry(ribbon_img, heraldry, wanted_height, self.__gap)
         
         return ribbon_heraldry
     

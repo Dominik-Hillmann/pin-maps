@@ -45,7 +45,6 @@ class Map:
         background_path = os.path.join('data', 'img', background_name)
         background = plt.imread(background_path)
         # background_extent = (5.5, 15.3, 47.0, 55.5) # (west, east, south, north)
-
         background_extent = (5.82, 15.12, 47.19, 55.31) # (west, east, south, north)
 
         self.ax.imshow(background, origin = 'upper', extent = background_extent)
@@ -69,11 +68,19 @@ class Map:
         # Find rescaling of width such that heraldry itself (not the ribbon!) is all the same size.
         # Idea: find out by how much more ribbon in width there is by measuring amount of empty px in width in middle height.
         height, width, channels = pin_arr.shape
-        middle_px_slice = np.sum(pin_arr[round(0.5 * height), :, :], axis = 1)
-        # summed = np.sum(pin_arr[round(0.5 * height), :, :], axis = 1)
-        complete_middle_width = len(middle_px_slice)
-        heraldry_middle_width_ratio = 1.0 - (np.sum(middle_px_slice == 0) / complete_middle_width)
-        lat_width = lat_width / (heraldry_middle_width_ratio * complete_middle_width) * complete_middle_width
+       
+        # Before, problem was that at prop. height 0.5, there could be a gap between label and heraldry.
+        # This resulted in no heraldry being detected and cartopy wanted to make the pin infinitly large.
+        # So now, if there is now heraldry detected, test at 0.6, then 0.7 and so on.
+        for slice_height_prop in [0.5, 0.6, 0.7, 0.8, 0.9]:
+            px_slice = np.sum(pin_arr[round(slice_height_prop * height), :, :], axis = 1) # Channels added together
+            slice_width = len(px_slice)
+            heraldry_prop_in_img = 1.0 - (np.sum(px_slice == 0) / slice_width)
+            if heraldry_prop_in_img != 0.0:
+                break
+        
+        assert heraldry_prop_in_img != 0.0
+        lat_width = lat_width / (heraldry_prop_in_img * slice_width) * slice_width
 
         # Repositioning due to different scaling of the map background and the grid.
         if lon < 49.9:
