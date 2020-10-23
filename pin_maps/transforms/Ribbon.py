@@ -133,11 +133,8 @@ class Ribbon(ImageTransform):
         ribbon_drawer.text(text_pos, self.town_name, 'black', font)
         
         ribbon_img = self.__attach_ribbon_ends(ribbon_img)
-        # We want the middle part of all ribbons to be the same height, not the complete ribbon including the ends.        
         prop_ribbon_of_label = segment_height / ribbon_img.height
-        print(prop_ribbon_of_label)
-        wanted_height = self.__ribbon_height #round(self.__ribbon_height / prop_ribbon_of_label) 
-        ribbon_heraldry = self._add_label_to_heraldry(ribbon_img, heraldry, wanted_height, self.__gap)
+        ribbon_heraldry = self._add_label_to_heraldry(ribbon_img, heraldry, self.__ribbon_height, self.__gap)
         
         return ribbon_heraldry
     
