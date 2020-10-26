@@ -47,6 +47,7 @@ class Ribbon(ImageTransform):
         ribbon_height: int = 100, 
         ribbon_choice: Union[None, int] = None # For debugging.
     ):
+        super().__init__()
         self.town_name = town_name[0].capitalize() + town_name[1:]
         self.__gap = gap
         self.__ribbon_height = ribbon_height

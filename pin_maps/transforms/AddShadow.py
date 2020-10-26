@@ -30,12 +30,13 @@ class AddShadow(ImageTransform):
         """Adds a shadow below the heraldry.
 
         Args:
+        -----
             heraldry (Image.Image): The image to which you want to add the shadow.
 
         Returns:
+        --------
             Image.Image: The image containing a shadow.
         """
-
         heraldry = heraldry.convert('RGBA')
         orig_width, orig_height = heraldry.size
 

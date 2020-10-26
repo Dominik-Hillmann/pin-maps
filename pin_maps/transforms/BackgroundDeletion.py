@@ -9,6 +9,7 @@ class BackgroundDeletion(ImageTransform):
     """Makes the background of an image transparent.
 
     Args:
+    -----
         px_dist (int, optional): Difference between pixels such that they 
         are considered the same area. Defaults to 50.
         replace_val (Tuple[int, int, int, int], optional): The value that 
@@ -28,15 +29,12 @@ class BackgroundDeletion(ImageTransform):
 
         Returns:
             Image.Image: The image with transparent background.
-        """
-        
+        """        
         heraldry = heraldry.convert('RGBA')
-        # new_val = (255, 255, 255, 0) # Last zero important: transparency.
         seed_right = (val - 1 for val in heraldry.size)
         ImageDraw.floodfill(heraldry, xy = seed_right, value = self.replace_val, thresh = self.px_dist)
 
-        _, height = heraldry.size
-        seed_left = (0, height - 1)
+        seed_left = (0, heraldry.height - 1)
         ImageDraw.floodfill(heraldry, xy = seed_left, value = self.replace_val, thresh = self.px_dist)
 
         return heraldry

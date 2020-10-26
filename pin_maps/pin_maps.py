@@ -7,6 +7,8 @@ from transforms.AddShadow import AddShadow
 from transforms.BackgroundDeletion import BackgroundDeletion
 from transforms.Ribbon import Ribbon
 from transforms.OffsetLettering import OffsetLettering
+from transforms.Scale import Scale
+from transforms.Cutout import Cutout
 from draw.Map import Map
 from draw.Pin import Pin
 # Python libraries
@@ -19,10 +21,9 @@ import random
 from PIL import Image, ImageDraw, ImageFont
 # Typing
 from typing import List, Tuple, Union
-# Dev
-from pprint import pprint
 # Settings
 random.seed(69)
+
 
 def main() -> None:
     params = ParamsParser()
@@ -33,10 +34,11 @@ def main() -> None:
     added_frame_px = 150
     # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
     # germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
-    img_transforms = [BackgroundDeletion(), AddShadow()]
+    img_transforms = [BackgroundDeletion(), Cutout(), Scale(150), AddShadow()]
     germany = Map('de-neg.shp', 'old-topo.png', [5.7, 15.3, 47.2, 56.2])
     
     for location in params.locations:
+        print(location.name)
         specific_transforms = img_transforms + [Ribbon(location.name)] if params.ribbons else img_transforms
         print('TRANSOFRMS', specific_transforms)
         try:
@@ -46,6 +48,7 @@ def main() -> None:
             continue
 
         germany.add_pin(pin)
+        print()
 
     raw_img_name = f'raw-{round(time())}.png'
     germany.save(raw_img_name)
@@ -68,6 +71,7 @@ def main() -> None:
             font_height # Meaning the height of the main title, stupid variable naming!
         )
     else:
+        
         write_main_text(
             img_new,
             t,
