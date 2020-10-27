@@ -34,6 +34,7 @@ class Ribbon(ImageTransform):
         (Image.open(os.path.join(__ribbon_path, 'right-end-2.png')), -30, 43),
         (Image.open(os.path.join(__ribbon_path, 'right-end-3.png')), -40, 70)
     ]
+    __max_offset = max([abs(choice[2]) for choice in __left_end_choices]) + max([abs(choice[2]) for choice in __right_end_choices])
 
     # A character which stretches all the way down such that font is properly aligned.
     _cellar_char = 'j'
@@ -83,9 +84,9 @@ class Ribbon(ImageTransform):
         # Dimensions of the final image.
         complete_dims = (
             abs(self.__left_adjust_x) + ribbon_width + self.__right_adjust_x + right_width,
-            abs(self.__left_adjust_y) + ribbon_height + abs(self.__right_adjust_y)
+            self.__max_offset + ribbon_height # Old calculation: abs(self.__left_adjust_y) + ribbon_height + abs(self.__right_adjust_y)
         )
-        complete_img = Image.new('RGBA', complete_dims, color = (0, ) * 4)
+        complete_img = Image.new('RGBA', complete_dims, color = (0, 0, 0, 0))
         # Paste the ribbon itself into final image.
         ribbon_pos = (self.__left_adjust_x, self.__left_adjust_y)
         complete_img.paste(ribbon, ribbon_pos)

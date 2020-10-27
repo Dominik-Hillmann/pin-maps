@@ -44,9 +44,7 @@ class Scale(ImageTransform):
     # Override from ImageTransform
     def transform(self, heraldry: Image.Image) -> Image.Image:
         old_size = heraldry.size
-        print('Unskaliertes Bild:', old_size)
         new_size = self.__scale_dims(*old_size)
-        print('Skaliertes Bild:', new_size)
         
         img_arr = np.array(heraldry)
         scaled_img_arr = cv2.resize(img_arr, new_size)

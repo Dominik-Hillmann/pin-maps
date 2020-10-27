@@ -74,7 +74,7 @@ class ImageTransform(ABC):
         # Create image with maximum width and height of label and heraldry and a gap.
         complete_img_h = label.height + gap + heraldry.height
         complete_img_w = max(label.width, heraldry.width)
-        complete_img = Image.new('RGBA', (complete_img_w, complete_img_h), (0, 0, 0, 0))
+        complete_img = Image.new('RGBA', (complete_img_w, complete_img_h), (0, ) * 4)
         
         # Paste both images into correct postion.
         if label.width >= heraldry.width:
