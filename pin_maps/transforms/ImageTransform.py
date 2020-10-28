@@ -87,9 +87,9 @@ class ImageTransform(ABC):
         label_paste_pos = (label_paste_w, 0)
         heraldry_paste_pos = (heraldry_paste_w, label.height + gap)
 
-        complete_img.paste(label, label_paste_pos)
         complete_img.paste(heraldry, heraldry_paste_pos)
-
+        complete_img.paste(label, label_paste_pos, label)
+    
         return complete_img
 
 

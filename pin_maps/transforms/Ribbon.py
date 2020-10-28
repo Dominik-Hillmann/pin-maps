@@ -35,16 +35,19 @@ class Ribbon(ImageTransform):
         (Image.open(os.path.join(__ribbon_path, 'right-end-3.png')), -40, 70)
     ]
     __max_offset = max([abs(choice[2]) for choice in __left_end_choices]) + max([abs(choice[2]) for choice in __right_end_choices])
-
+    __max_left_adjust_y = max([choice[2] for choice in __left_end_choices])
+    
     # A character which stretches all the way down such that font is properly aligned.
     _cellar_char = 'j'
+    # Num of px the font is smaller than the ribbon height.
+    __font_gap = 15
 
 
     def __init__(
         self, 
         town_name: str, 
         font_path: str = None, 
-        gap: int = 7, 
+        gap: int  = -15, # 0 would be largest possible ribbon. 
         ribbon_height: int = 100, 
         ribbon_choice: Union[None, int] = None # For debugging.
     ):
@@ -80,22 +83,27 @@ class Ribbon(ImageTransform):
         """
         right_width, _ = self.__right_end.size
         ribbon_width, ribbon_height = ribbon.size
-        
+        # This difference in y position is needed for all ribbons to have the same distance
+        # to the pin itself. Because size of ribbon image is determined by the largest
+        # possible ribbon, not this individual ribbon --> adjustments to its position in the image.
+        diff_left_adjust_y = self.__max_left_adjust_y - self.__left_adjust_y
+
         # Dimensions of the final image.
         complete_dims = (
             abs(self.__left_adjust_x) + ribbon_width + self.__right_adjust_x + right_width,
-            self.__max_offset + ribbon_height # Old calculation: abs(self.__left_adjust_y) + ribbon_height + abs(self.__right_adjust_y)
+            self.__max_offset + ribbon_height
         )
         complete_img = Image.new('RGBA', complete_dims, color = (0, 0, 0, 0))
         # Paste the ribbon itself into final image.
-        ribbon_pos = (self.__left_adjust_x, self.__left_adjust_y)
+        ribbon_pos = (self.__left_adjust_x, self.__left_adjust_y + diff_left_adjust_y)
         complete_img.paste(ribbon, ribbon_pos)
         # Paste the left ribbon end into the final image.
-        complete_img.paste(self.__left_end, (0, 0), self.__left_end)
+        left_pos = (0, 0 + diff_left_adjust_y)
+        complete_img.paste(self.__left_end, left_pos, self.__left_end)
         # Paste the right ribbon end into the final image.
         right_pos = (
             self.__left_adjust_x + ribbon_width + self.__right_adjust_x, 
-            abs(self.__left_adjust_y)
+            self.__left_adjust_y + diff_left_adjust_y
         )
         complete_img.paste(self.__right_end, right_pos, self.__right_end)
 
@@ -106,8 +114,7 @@ class Ribbon(ImageTransform):
     def transform(self, heraldry: Image.Image) -> Image.Image:
         segment_width, segment_height = self.__segment_left.size # Both have same dimensions.
         
-        eta = 15 # in px
-        font = self._get_sized_font(segment_height, eta)
+        font = self._get_sized_font(segment_height, self.__font_gap)
         text_width, _ = font.getsize(self.town_name)
         _, text_height = font.getsize(self.town_name + self._cellar_char)
         cellar_width, _ = font.getsize(self._cellar_char)
