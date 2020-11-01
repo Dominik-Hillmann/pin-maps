@@ -66,20 +66,6 @@ class ParamsParser:
             'the second for the body.'
         )
         parser.add_argument(
-            '-a', '--latitudes',
-            nargs = '+',
-            type = float,
-            help = 'A list of the latitudes of the pins. The lists of ' + 
-            'latitudes and longitudes need to have the same length.'
-        )
-        parser.add_argument(
-            '-o', '--longitudes',
-            nargs = '+',
-            type = float,
-            help = 'A list of the longitudes of the pins. The lists of ' + 
-            'latitudes and longitudes need to have the same length.'
-        )
-        parser.add_argument(
             '--ribbons',
             action = 'store_true',
             help = 'Whether ribbons should be added to the pins.'
@@ -98,13 +84,6 @@ class ParamsParser:
         self.__parsed_args = vars(parser.parse_args())
         print(self.__parsed_args)
 
-        # CHECK LATS AND LONS
-        lats = self.__parsed_args['latitudes']
-        lons = self.__parsed_args['longitudes']
-        if lats is not None and lons is not None:
-            if len(lats) != len(lons):
-                raise ValueError('Latitudes and longitudes need to have the same length.')
-        
         # COUNTRY POSSIBILITY COUNTRY
         possib_countries = list(self.__config['countries'].keys())
         country = self.__parsed_args['country']
@@ -135,9 +114,6 @@ class ParamsParser:
             raise ValueError(f'Marker {marker} not available; available are: {", ".join(possib_markers)}.')
         
         # PARSING ALL POSITIONS
-        latitudes = self.__parsed_args['latitudes']
-        longitudes = self.__parsed_args['longitudes']
-        coord_pins = zip(latitudes, longitudes) if latitudes is not None else []
         name_pins = self.__parsed_args['towns']
         if name_pins is not None:
             sep = ','
@@ -145,7 +121,7 @@ class ParamsParser:
         else:
             name_pins = []
         self.locations = []
-        for location in coord_pins + name_pins:
+        for location in name_pins:
             try:
                 self.locations.append(Coordinates(location))
             except NameError as e:
