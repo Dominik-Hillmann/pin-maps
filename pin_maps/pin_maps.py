@@ -32,6 +32,8 @@ def main() -> None:
     height_text_space = 750
     text = u'Inge & Das ist ein Test'
     added_frame_px = 150
+
+    print(params.marker_symbol)
     # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
     # germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
     img_transforms = [BackgroundDeletion(), Cutout(), Scale(110), AddShadow()]

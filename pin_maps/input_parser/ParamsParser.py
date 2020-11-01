@@ -125,7 +125,7 @@ class ParamsParser:
             try:
                 self.locations.append(Coordinates(location))
             except NameError as e:
-                print(str(e)) # Information about which town name could not be resolved.    
+                print(str(e))    
                 continue
 
         # RIBBON
@@ -135,11 +135,15 @@ class ParamsParser:
         # BORDER
         self.border_wanted = not self.__parsed_args['noborder']
 
+
     @property
     def marker_symbol(self):
-        chosen_marker = self.__parsed_args['marker']
         available_markers = self.__config['markers']
-        return available_markers[chosen_marker] if chosen_marker is not None else available_markers[self.__standard_marker_name]
+        try:
+            marker_name = available_markers[self.__parsed_args['marker']]
+            return os.path.join('data', 'img', marker_name)
+        except KeyError:
+            return available_markers[self.__standard_marker_name]
 
 
     @property
