@@ -34,10 +34,9 @@ def main() -> None:
     added_frame_px = 150
 
     print(params.marker_symbol)
-    # germany = Map('de-neg.shp', 'space.png', [5.7, 15.3, 47.2, 56.2])
-    # germany = Map('de-neg.shp', 'old-cut.png', [5.7, 15.3, 47.2, 56.2])
     img_transforms = [BackgroundDeletion(), Cutout(), Scale(110), AddShadow()]
-    germany = Map('de-neg.shp', 'old-topo.png', [5.7, 15.3, 47.2, 56.2])
+    # germany = Map('de-neg.shp', 'old-topo.png', [5.7, 15.3, 47.2, 56.2])
+    germany = Map('de-neg.shp', 'old-topo.png', [5.32, 15.55, 47.2, 56.2])
     
     for location in params.locations:
         print(location.name)
@@ -55,7 +54,8 @@ def main() -> None:
     raw_img_name = f'raw-{round(time())}.png'
     germany.save(raw_img_name)
 
-    cropping = (300, 650, 1760, 2580) # (left, top, right, bottom)
+    # cropping = (300, 650, 1760, 2580) # (left, top, right, bottom)
+    cropping = (300, 650, 1760, 2525) # (left, top, right, bottom)
     img_new, (width_cropped, height_cropped) = crop_add_text_space(raw_img_name, cropping, height_text_space)
     draw, font_height = write_header(img_new, params.head_font_path, text, height_cropped, added_frame_px)
    
@@ -72,8 +72,7 @@ def main() -> None:
             added_frame_px,
             font_height # Meaning the height of the main title, stupid variable naming!
         )
-    else:
-        
+    else:        
         write_main_text(
             img_new,
             t,
