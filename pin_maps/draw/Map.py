@@ -83,8 +83,9 @@ class Map:
         lat_width = lat_width / (heraldry_prop_in_img * slice_width) * slice_width
 
         # Repositioning due to different scaling of the map background and the grid.
-        if lon < 49.9:
-            lon -= 0.2
+        if lon < 49.9 and lat > 7.3:
+            # lon -= 0.2
+            lat -= 0.25
         elif lon > 53.5:
             lon += 0.1 
 
