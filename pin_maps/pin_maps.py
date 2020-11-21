@@ -29,8 +29,9 @@ def main() -> None:
     params = ParamsParser()
     create_output_dir()
     
-    height_text_space = 750
-    text = u'Inge & Das ist ein Test'
+    # height_text_space = 750
+    height_text_space = 930
+    text = u'Laura & Philipp'
     added_frame_px = 150
 
     print(params.marker_symbol)
@@ -59,7 +60,7 @@ def main() -> None:
     img_new, (width_cropped, height_cropped) = crop_add_text_space(raw_img_name, cropping, height_text_space)
     draw, font_height = write_header(img_new, params.head_font_path, text, height_cropped, added_frame_px)
    
-    t = 'München und Nürnberg sind in Bayern. Hallo, Wolfsburg ist ein Dresden. Ping ping pong ping ping pong Halle.'
+    t = 'Aufgewachsen in Köln und Magdeburg, verliebt in München, zusammengezogen nach Heidelberg. Ich werde Dich für immer lieben!'
     if params.text_coats:
         write_main_text_with_heraldry(
             t, 
