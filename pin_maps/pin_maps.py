@@ -31,7 +31,7 @@ def main() -> None:
     
     # height_text_space = 750
     height_text_space = 930
-    text = u'Laura & Philipp'
+    heading = u'Laura & Philipp'
     added_frame_px = 150
 
     print(params.marker_symbol)
@@ -57,10 +57,18 @@ def main() -> None:
 
     # cropping = (300, 650, 1760, 2580) # (left, top, right, bottom)
     cropping = (300, 650, 1760, 2525) # (left, top, right, bottom)
-    img_new, (width_cropped, height_cropped) = crop_add_text_space(raw_img_name, cropping, height_text_space)
-    draw, font_height = write_header(img_new, params.head_font_path, text, height_cropped, added_frame_px)
+    img = Image.open(os.path.join('output', raw_img_name))
+    
+    img = crop_map(img, cropping)
+    _, height_map = img.size
+    img_new = add_text_space(img, height_text_space)
+
+    # img_new, (width_cropped, height_cropped) = crop_add_text_space(raw_img_name, cropping, height_text_space)
+    font_heading = get_sized_font(params.head_font_path, heading, img_new.width)
+    write_header(img_new, heading, font_heading, height_map, added_frame_px)
    
     t = 'Aufgewachsen in Köln und Magdeburg, verliebt in München, zusammengezogen nach Heidelberg. Ich werde Dich für immer lieben!'
+    font_height_heading = font_heading.getsize(heading)[1]
     if params.text_coats:
         write_main_text_with_heraldry(
             t, 
@@ -69,9 +77,9 @@ def main() -> None:
             70,
             30,
             [location.name.lower() for location in params.locations],
-            height_cropped,
+            height_map,
             added_frame_px,
-            font_height # Meaning the height of the main title, stupid variable naming!
+            font_height_heading
         )
     else:        
         write_main_text(
@@ -79,9 +87,9 @@ def main() -> None:
             t,
             params.main_font_path, 
             70,
-            height_cropped,
+            height_map,
             added_frame_px,
-            font_height
+            font_height_heading
         )
 
     framed_img = frame_img(img_new, added_frame_px, params.border_wanted)
@@ -143,70 +151,79 @@ def create_output_dir() -> None:
         os.mkdir(os.path.join(os.getcwd(), 'output'))
 
 
-def crop_add_text_space(
-    raw_img_name: str,
-    cropping: Tuple[float, float, float, float],
-    added_text_height: int
-) -> (Image.Image, Tuple[int, int]):
-    """Crops the cartopy output and adds space to write text into below.
-
+def crop_map(img: Image.Image, cropping: Tuple[float, float, float, float]) -> Image.Image:
+    """Crops the Cartopy map image.
+    
     Args:
         raw_img_name (str): The name if the image file with the map in the output directory.
         cropping (Tuple[float, float, float, float]): Pixels from which map will be cropped (left, top, right, bottom).
-        added_text_height (int): The height of the area below into which text will be written.
-
+    
     Returns:
         (Image, Tuple[int, int]): The changed image and the size of the cropped map.
     """
-
-    img = Image.open(os.path.join('output', raw_img_name))
     img = img.crop(cropping)
-    width_cropped, height_cropped = img.size
     
+    return img
+
+
+def add_text_space(img: Image.Image, added_text_height: int) -> Image.Image:
+    width_cropped, height_cropped = img.size
     dims_with_text = (width_cropped, height_cropped + added_text_height)
     img_text = Image.new(img.mode, dims_with_text, color = (255, ) * 3)
     img_text.paste(img, (0, 0))
 
-    return img_text, (width_cropped, height_cropped)
+    return img_text
 
 
-def write_header(
-    img: Image, 
-    font_path: str, 
-    text: str, 
-    height_cropped: int, 
-    frame_width: int,
-    adjustment: int = 20
-) -> Tuple[ImageDraw.Draw, int]:
-    """Writes the header below the image itself.
+def get_sized_font(font_path: str, text: str, img_width: int) -> Tuple[ImageFont.ImageFont, int]:
+    """Erzeugt die Schriftgröße, die die gegebene Breite füllt.
 
-    Args
-    ----
-        img (Image): 
-        font_path (str): 
-        text (str): 
-        height_cropped (int): 
-        frame_width (int):
-        adjustment (int): Defaults to 20.
+    Args:
+        font_path (str): [description]
+        text (str): [description]
 
-    Returns
-    -------
-        [type]: [description]
+    Returns:
+        ImageFont.ImageFont: [description]
     """
-    img_width, _ = img.size
     font_size = 500 # Arbitrary but high start value
     font = ImageFont.truetype(font_path, font_size)
-    font_width, font_height = font.getsize(text) 
+    font_width, _ = font.getsize(text) 
 
     while font_width > img_width:
         font_size -= 1
         font = ImageFont.truetype(font_path, font_size)
-        font_width, font_height = font.getsize(text)
+        font_width, _ = font.getsize(text)
     
-    draw = ImageDraw.Draw(img)
-    draw.text((0, height_cropped + frame_width - adjustment), text, 'black', font)
+    return font
 
-    return draw, font_height
+
+def write_header(
+    img: Image.Image,
+    text: str, 
+    font: ImageFont.ImageFont,
+    height_map_part: int, 
+    frame_width: int,
+    adjustment: int = -20
+) -> ImageDraw.Draw:
+    """[summary]
+
+    Args:
+        img (Image.Image): [description]
+        text (str): [description]
+        font (ImageFont.ImageFont): [description]
+        height_map_part (int): [description]
+        frame_width (int): [description]
+        adjustment (int, optional): [description]. Defaults to -20.
+
+    Returns:
+        ImageDraw.Draw: [description]
+    """
+    print(type(img), type(text), type(font))
+    draw = ImageDraw.Draw(img)
+    start_height_heading = height_map_part + frame_width + adjustment 
+    draw.text((0, start_height_heading), text, 'black', font)
+
+    return draw
 
 
 def pattern_2nd_text(
@@ -250,7 +267,15 @@ def pattern_2nd_text(
     return list(zip(starts, lines))
 
 
-def town_formatting(town_name):
+def town_formatting(town_name: str) -> str:
+    """Formats a town's name correctly.
+
+    Args:
+        town_name (str): The name.
+
+    Returns:
+        str: The formatted name.
+    """
     return town_name.lower().strip('.?,!:;-%()"\'$€/')
 
 
@@ -293,15 +318,15 @@ def compile_to_line(line_pattern: List[Tuple[bool, List[str]]]) -> List[Union[Im
 
 
 def write_main_text(
-    img: Image,
+    img: Image.Image,
     text: str, 
-    font_path: str, 
+    font_path: str, # zu font
     font_size: int,
     height_cropped: int,
     added_frame_px: int,
     font_height: int,
     line_spacing: int = 30
-) -> Image:
+) -> Image.Image:
     """Writes the main text into the free area.
 
     Args:
@@ -309,7 +334,7 @@ def write_main_text(
         text (str): The text that will be written
         font_path (str): Path to the font used.
         font_size (int): The font size.
-        height_cropped (int): Height of the cropped out map.
+        height_cropped (int): Height of the cropped-out map.
         added_frame_px (int): The width of the future frame.
         font_height (int): The height of the font of the heading.
         line_spacing (int, optional): Number of pixels in spacing between lines. Defaults to 30.
