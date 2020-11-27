@@ -35,6 +35,8 @@ def main() -> None:
     added_frame_px = 150
 
     print(params.marker_symbol)
+
+    # --- Map creation and pin setting ----------------------------------------
     img_transforms = [BackgroundDeletion(), Cutout(), Scale(110), AddShadow()]
     # germany = Map('de-neg.shp', 'old-topo.png', [5.7, 15.3, 47.2, 56.2])
     germany = Map('de-neg.shp', 'old-topo.png', [5.32, 15.55, 47.2, 56.2])
@@ -55,47 +57,54 @@ def main() -> None:
     raw_img_name = f'raw-{round(time())}.png'
     germany.save(raw_img_name)
 
+    # --- Map cropping --------------------------------------------------------
     # cropping = (300, 650, 1760, 2580) # (left, top, right, bottom)
     cropping = (300, 650, 1760, 2525) # (left, top, right, bottom)
-    img = Image.open(os.path.join('output', raw_img_name))
-    
+    img = Image.open(os.path.join('output', raw_img_name))    
     img = crop_map(img, cropping)
-    _, height_map = img.size
-    img_new = add_text_space(img, height_text_space)
 
-    # img_new, (width_cropped, height_cropped) = crop_add_text_space(raw_img_name, cropping, height_text_space)
-    font_heading = get_sized_font(params.head_font_path, heading, img_new.width)
-    write_header(img_new, heading, font_heading, height_map, added_frame_px)
-   
+    # --- Embedding into larger image and setting of heading ------------------
+    _, height_map = img.size
+    img = add_text_space(img, height_text_space)
+
+    font_heading = get_sized_font(params.head_font_path, heading, img.width)
+    end_y_heading = write_header(img, heading, font_heading, height_map, added_frame_px)
+
+    # --- Embeds main text ----------------------------------------------------
     t = 'Aufgewachsen in Köln und Magdeburg, verliebt in München, zusammengezogen nach Heidelberg. Ich werde Dich für immer lieben!'
     font_height_heading = font_heading.getsize(heading)[1]
+
+    main_text_font = ImageFont.truetype(params.main_font_path, 70)
     if params.text_coats:
         write_main_text_with_heraldry(
             t, 
-            img_new, 
-            ImageFont.truetype(params.main_font_path, 70),
+            img, 
+            main_text_font,
             70,
             30,
             [location.name.lower() for location in params.locations],
             height_map,
-            added_frame_px,
-            font_height_heading
-        )
-    else:        
-        write_main_text(
-            img_new,
-            t,
-            params.main_font_path, 
-            70,
-            height_map,
-            added_frame_px,
-            font_height_heading
+            # added_frame_px,
+            # font_height_heading
+            end_y_heading
         )
 
-    framed_img = frame_img(img_new, added_frame_px, params.border_wanted)
-    framed_img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
+    else:
+        write_main_text(img, t, main_text_font, end_y_heading)    
+        # write_main_text(
+            # img,
+            # t,
+            # main_text_font,
+            # height_map,
+            # added_frame_px,
+            # font_height_heading
+        # )
 
-town_name_format = lambda word: word.lower().strip('.?,!:;-%()"\'$€/')
+    # --- Sets a frame around image and saves ---------------------------------
+    img = frame_img(img, added_frame_px, params.border_wanted)
+    img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
+
+town_name_format = lambda word: word.lower().strip('.?,!:;_-%()"\'$€/')
 
 def write_main_text_with_heraldry(
     text: str,
@@ -105,12 +114,14 @@ def write_main_text_with_heraldry(
     line_spacing: int,
     town_names: List[str],
     height_cropped: int,
-    added_frame_px: int,
-    height_heading: int,
+    # added_frame_px: int,
+    # height_heading: int,
+    end_y_heading: int, # The y position at which the heading ends.
     coat_text_gap: int = 15
 ):
     _, font_height = font.getsize('Tg')
-    start_y = height_cropped + added_frame_px + height_heading + line_spacing
+    # start_y = height_cropped + added_frame_px + height_heading # + line_spacing
+    start_y = end_y_heading + line_spacing
     for start_x, line_pattern in pattern_2nd_text_with_coats(text, img, font, font_size, line_spacing, town_names):
         line = compile_to_line(line_pattern)
         drawing = ImageDraw.Draw(img)
@@ -139,7 +150,7 @@ def get_coat_from_cache(town_name):
 def proportional_size(set_height, img) -> Tuple[int, int]:
     current_w, current_h = img.size
     max_w, max_h = current_w, set_height,
-    resize_ratio = min(max_w / current_w, max_h/ current_h)
+    resize_ratio = min(max_w / current_w, max_h / current_h)
     return (round(resize_ratio * current_w), round(resize_ratio * current_h))
 
 
@@ -203,8 +214,8 @@ def write_header(
     font: ImageFont.ImageFont,
     height_map_part: int, 
     frame_width: int,
-    adjustment: int = -20
-) -> ImageDraw.Draw:
+    adjustment: int = -150
+) -> int:
     """[summary]
 
     Args:
@@ -216,14 +227,15 @@ def write_header(
         adjustment (int, optional): [description]. Defaults to -20.
 
     Returns:
-        ImageDraw.Draw: [description]
+        int: The y position at which the heading stops.
     """
-    print(type(img), type(text), type(font))
     draw = ImageDraw.Draw(img)
-    start_height_heading = height_map_part + frame_width + adjustment 
-    draw.text((0, start_height_heading), text, 'black', font)
+    start_y_heading = height_map_part + frame_width + adjustment 
+    draw.text((0, start_y_heading), text, 'black', font)
 
-    return draw
+    _, heading_height = font.getsize(text)
+    end_y_heading = start_y_heading + heading_height
+    return end_y_heading
 
 
 def pattern_2nd_text(
@@ -245,7 +257,6 @@ def pattern_2nd_text(
     Returns:
         List[Tuple[int, str]]: The list of the horizontal start positions and the lines.
     """
-
     lines = []
     starts = []
     text = text.split(' ')
@@ -320,41 +331,28 @@ def compile_to_line(line_pattern: List[Tuple[bool, List[str]]]) -> List[Union[Im
 def write_main_text(
     img: Image.Image,
     text: str, 
-    font_path: str, # zu font
-    font_size: int,
-    height_cropped: int,
-    added_frame_px: int,
-    font_height: int,
+    # font_path: str, # zu font
+    # font_size: int,
+    font: ImageFont.ImageFont,
+    # height_cropped: int,
+    # added_frame_px: int,
+    # font_height: int,
+    end_y_heading: int,
     line_spacing: int = 30
 ) -> Image.Image:
-    """Writes the main text into the free area.
-
-    Args:
-        img (Image): The image on which will be written.
-        text (str): The text that will be written
-        font_path (str): Path to the font used.
-        font_size (int): The font size.
-        height_cropped (int): Height of the cropped-out map.
-        added_frame_px (int): The width of the future frame.
-        font_height (int): The height of the font of the heading.
-        line_spacing (int, optional): Number of pixels in spacing between lines. Defaults to 30.
-
-    Returns:
-        Image: The image with text.
-    """
-
     img_width, img_height = img.size
     draw = ImageDraw.Draw(img)
 
-    hori_start = height_cropped + added_frame_px + font_height + line_spacing # Height of first heading
-    font = ImageFont.truetype(font_path, font_size)
+    # start_y = height_cropped + added_frame_px + font_height + line_spacing # Height of first heading
+    # font = ImageFont.truetype(font_path, font_size)
+    start_y = end_y_heading + line_spacing
     font_width, font_height = font.getsize(text)
     
     pattern = pattern_2nd_text(text, img_width, font)
     for vert_start, line in pattern:
-        draw_pos = (vert_start, hori_start)
+        draw_pos = (vert_start, start_y)
         draw.text(draw_pos, line, (0, ) * 3, font)
-        hori_start += font_height + line_spacing
+        start_y += font_height + line_spacing
     
     return img
 
@@ -374,17 +372,31 @@ def frame_img(
     Returns:
         Image: [description]
     """
+    # TODO Hier die Breite an gegebene Höhe so anpassen, dass das Verhältnis
+    # Breite/Höhe 2/3 ist (12/18).
+    # print('FRAMING FUNCTION')
     orig_width, orig_height = img.size
-    frame_dims = (orig_width + added_frame_px * 2, orig_height + added_frame_px * 2)
+    # frame_dims = (orig_width + added_frame_px * 2, orig_height + added_frame_px * 2)
+    new_frame_height = orig_height + added_frame_px
+    new_frame_width = (12 / 18) * (orig_height + added_frame_px) # NOTE Falsch, added_frame_px beachten
+    if new_frame_width < orig_width:
+        raise ValueError(f'Neue Breite ist kleiner als alte {new_frame_width} zu {orig_width}.')
+    
+    
+    frame_dims = (round(new_frame_width), round(new_frame_height))
+    # print(frame_dims)
     framed_img = Image.new(img.mode, frame_dims, (255, ) * 3)
-    framed_img.paste(img, (added_frame_px, ) * 2)
+
+    addtional_width = round(new_frame_width - orig_width)
+    pasting_pos = (round(addtional_width / 2), round(added_frame_px / 2))
+    framed_img.paste(img, pasting_pos)
     
     if border_wanted:
-        half_frame_px = round(added_frame_px / 2)
+        half_frame_px = round(added_frame_px / 2) # Halbe Randbreite
         upper_left_corner = (half_frame_px, ) * 2
-        upper_right_corner = (3 * half_frame_px + orig_width, half_frame_px)
-        lower_left_corner = (half_frame_px, 3 * half_frame_px + orig_height)
-        lower_right_corner = (3 * half_frame_px + orig_width, 3 * half_frame_px + orig_height)
+        upper_right_corner = (new_frame_width - half_frame_px, half_frame_px)
+        lower_left_corner = (half_frame_px, new_frame_height - half_frame_px)
+        lower_right_corner = (new_frame_width - half_frame_px, new_frame_height - half_frame_px)
         shape = [upper_left_corner, upper_right_corner, lower_right_corner, lower_left_corner, upper_left_corner]
 
         drawing = ImageDraw.Draw(framed_img)
