@@ -90,18 +90,11 @@ def main() -> None:
         )
 
     else:
-        write_main_text(img, t, main_text_font, end_y_heading)    
-        # write_main_text(
-            # img,
-            # t,
-            # main_text_font,
-            # height_map,
-            # added_frame_px,
-            # font_height_heading
-        # )
+        write_main_text(img, t, main_text_font, end_y_heading)
 
     # --- Sets a frame around image and saves ---------------------------------
     img = frame_img(img, added_frame_px, params.border_wanted)
+    img = add_logo(img, added_frame_px)
     img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
 
 town_name_format = lambda word: word.lower().strip('.?,!:;_-%()"\'$€/')
@@ -114,18 +107,38 @@ def write_main_text_with_heraldry(
     line_spacing: int,
     town_names: List[str],
     height_cropped: int,
-    # added_frame_px: int,
-    # height_heading: int,
     end_y_heading: int, # The y position at which the heading ends.
     coat_text_gap: int = 15
 ):
     _, font_height = font.getsize('Tg')
-    # start_y = height_cropped + added_frame_px + height_heading # + line_spacing
+    
     start_y = end_y_heading + line_spacing
-    for start_x, line_pattern in pattern_2nd_text_with_coats(text, img, font, font_size, line_spacing, town_names):
+
+    complete_text_pattern = pattern_2nd_text_with_coats(text, img, font, font_size, line_spacing, town_names)
+    # max_num_coats_in_line = 0
+    # for _, _, num_coats in complete_text_pattern:
+    #     if num_coats > max_num_coats_in_line:
+    #         max_num_coats_in_line = num_coats
+    
+    added_width_of_line_by_coat = []
+    for _, line_pattern, _ in complete_text_pattern:
+        line = compile_to_line(line_pattern)
+        added_width_in_this_line = 0
+        for line_element in line:
+            if type(line_element) is not str:
+                element_width, _ = proportional_size(font_height, line_element)
+                added_width_in_this_line += element_width + 2 * coat_text_gap
+        
+        added_width_of_line_by_coat.append(added_width_in_this_line)
+
+    print(added_width_of_line_by_coat)
+    for iter_num, (start_x, line_pattern, num_coats) in enumerate(complete_text_pattern):
+        added_coat_width = added_width_of_line_by_coat[iter_num]
+        print(max(added_width_of_line_by_coat) - added_coat_width)
+        start_x += round((max(added_width_of_line_by_coat) - added_coat_width) / 2)
         line = compile_to_line(line_pattern)
         drawing = ImageDraw.Draw(img)
-        
+            
         for i, line_element in enumerate(line):
             if type(line_element) is str:
                 drawing.text((start_x, start_y), line_element, font = font, fill = 'black')
@@ -304,16 +317,19 @@ def pattern_2nd_text_with_coats(
         words = line.split(' ')
         line_pattern = [(False, [])]
 
+        num_coats = 0
         for word in words:
             n_splits = len(line_pattern)
             if town_formatting(word) in town_names:
                 line_pattern.append((True, [word]))
+                num_coats += 1
             else:
                 line_pattern[n_splits - 1][1].append(word)
         
         if line_pattern[0] == (False, []):
             line_pattern = line_pattern[1:]
-        pattern.append((start_x, line_pattern))
+        
+        pattern.append((start_x, line_pattern, num_coats))
 
     return pattern
 
@@ -330,21 +346,14 @@ def compile_to_line(line_pattern: List[Tuple[bool, List[str]]]) -> List[Union[Im
 
 def write_main_text(
     img: Image.Image,
-    text: str, 
-    # font_path: str, # zu font
-    # font_size: int,
+    text: str,
     font: ImageFont.ImageFont,
-    # height_cropped: int,
-    # added_frame_px: int,
-    # font_height: int,
     end_y_heading: int,
     line_spacing: int = 30
 ) -> Image.Image:
     img_width, img_height = img.size
     draw = ImageDraw.Draw(img)
 
-    # start_y = height_cropped + added_frame_px + font_height + line_spacing # Height of first heading
-    # font = ImageFont.truetype(font_path, font_size)
     start_y = end_y_heading + line_spacing
     font_width, font_height = font.getsize(text)
     
@@ -403,6 +412,24 @@ def frame_img(
         drawing.line(shape, width = border_thickness, fill = 'black')
     
     return framed_img
+
+
+def add_logo(img: Image.Image, added_frame_px: int) -> Image.Image:
+    logo = Image.open(os.path.join('data', 'img', 'brainrain-logo-lang.jpg'))
+    print(logo)
+    logo = logo.resize(proportional_size(50, logo))
+    print(logo)
+    logo_width, logo_height = logo.size
+    
+    half_img_width = round(img.width / 2)
+    half_logo_width = round(logo_width / 2)
+    paste_pos = (
+        half_img_width - half_logo_width, 
+        img.height - logo_height - 50
+    )
+    img.paste(logo, paste_pos)
+
+    return img
 
 
 if __name__ == '__main__':

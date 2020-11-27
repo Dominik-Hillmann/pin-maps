@@ -1,0 +1,1 @@
+python pin_maps\pin_maps.py -c de -w space -t "Kiel, Rostock, Pasewalk, Wittenberge, Wolfsburg, Magdeburg, Eisenach, Dresden, Bielefeld, Köln, Heidelberg, Stuttgart, Nürnberg, München, Garmisch, Potsdam" --ribbons
