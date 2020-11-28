@@ -32,18 +32,14 @@ class ParamsParser:
             help = 'The country shape which will be displayed.'
         )
         parser.add_argument(
-            '-w', '--wallpaper',
+            '--heading',
+            type = str,
             required = True,
-            type = str,
-            help = 'The background image of the country shape.'
-        )
-        parser.add_argument(
-            '-s', '--super',
-            type = str,
             help = 'The header line.'
         )
         parser.add_argument(
             '-b', '--body',
+            required = True,
             type = str,
             help = 'The main text body below the header.'
         )
@@ -80,6 +76,11 @@ class ParamsParser:
             action = 'store_true',
             help = 'Whether a thin border will surround the image and the text.'
         )
+        parser.add_argument(
+            '--nologo',
+            action = 'store_true',
+            help = 'Use if you do not want the logo at the bottom.'
+        )
 
         self.__parsed_args = vars(parser.parse_args())
         print(self.__parsed_args)
@@ -92,12 +93,6 @@ class ParamsParser:
                 f'Selected country "{country}" not in the list of available countries: ' + 
                 f'{", ".join(possib_countries)} are possible.'
             )
-        
-        # CHECK POSSIBILTY WALLPAPER
-        possib_wallpapers = list(self.__config['countries'][country]['wallpapers'].keys())
-        wallpaper = self.__parsed_args['wallpaper']
-        if wallpaper not in possib_wallpapers:
-            raise ValueError(f'Wallpaper "{wallpaper}" not available; available are: {", ".join(possib_wallpapers)}.')
         
         # CHECK POSSIBILITY FONT
         fonts = self.__parsed_args['fonts']
@@ -145,33 +140,15 @@ class ParamsParser:
         except KeyError:
             return available_markers[self.__standard_marker_name]
 
-
-    @property
-    def wallpaper(self) -> Tuple[str, bool, Tuple[float, float, float, float]]:
-        """Get the file path, whether a shape is need and the extent of the chosen wallpaper.
-
-        Returns:
-            Tuple[str, bool, Tuple[float, float, float, float]]: File path, need for shaping and the extent (west, east, south, north).
-        """
-
-        wallpaper_name = self.__parsed_args['wallpaper']
-        chosen_country = self.__parsed_args['country']
-        wallpaper_data = self.__config['countries'][chosen_country]['wallpapers'][wallpaper_name] 
-        file_path = os.path.join('data', 'img', wallpaper_data['filename'])
-        shaping_need = wallpaper_data['shaped']
-        extent = wallpaper_data['extent']
-        
-        return file_path, shaping_need, extent 
-
     
     @property
-    def main_text(self) -> Union[str, None]:
+    def body(self) -> Union[str, None]:
         return self.__parsed_args['body']
 
 
     @property
-    def head_text(self) -> Union[str, None]:
-        return self.__parsed_args['super']
+    def heading(self) -> str:
+        return self.__parsed_args['heading']
 
     
     @property
@@ -199,3 +176,8 @@ class ParamsParser:
         del country_data['wallpapers']
         
         return country_data
+
+
+    @property
+    def logo_wanted(self) -> bool:
+        return not self.__parsed_args['nologo']
