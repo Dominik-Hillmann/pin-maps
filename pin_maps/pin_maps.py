@@ -1,6 +1,32 @@
 #!/usr/bin/env python
 """This program designs posters of maps with pins and undertitles."""
 
+
+
+
+
+
+
+
+
+# Upscaling redbubble
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Internal modules
 from input_parser.ParamsParser import ParamsParser
 from transforms.AddShadow import AddShadow
@@ -166,6 +192,18 @@ def pattern_2nd_text_with_coats(
         pattern.append((start_x, line_pattern, num_coats))
 
     return pattern
+
+
+def calc_pattern_size(
+    pattern: Union[List[Tuple[int, str]], List[Tuple[bool, List[str]]]],
+    line_spacing: int = 30
+) -> Tuple[int, int]:
+    if type(pattern[0][0]) is int:
+        pass
+    elif type(patter[0][0]) is bool:
+        pass
+    else:
+        pass
 
 
 def compile_to_line(line_pattern: List[Tuple[bool, List[str]]]) -> List[Union[Image.Image, str]]:
