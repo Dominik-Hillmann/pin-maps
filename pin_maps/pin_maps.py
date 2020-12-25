@@ -10,7 +10,9 @@
 
 
 # Upscaling redbubble
-
+# import cv2
+from cv2 import dnn_superres
+import numpy as np
 
 
 
@@ -104,8 +106,24 @@ def main() -> None:
     img = frame_img(img, added_frame_px, params.border_wanted)
     if params.logo_wanted:
         img = add_logo(img, added_frame_px)
+
+    print(type(superscale(img)))
+
     img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
 
+
+def superscale(img: Image.Image, scal_factor: int = 2) -> Image.Image:
+    superscaler = dnn_superres.DnnSuperResImpl_create()
+    model_path = os.path.join('data', 'models', f'EDSR_x{scal_factor}.pb')
+    superscaler.readModel(model_path)
+    superscaler.setModel('edsr', scal_factor)
+
+    img = img.convert('RGB')
+    # scaled_img = superscaler.upsample(np.array(img))
+    img = np.array(img)
+    img = Image.fromarray(img.astype('uint8'), 'RGB')
+    return img
+    # return scaled_img
 
 # --- Functions placing the raw map into the later total image ----------------
 def crop_map(img: Image.Image, cropping: Tuple[float, float, float, float]) -> Image.Image:
