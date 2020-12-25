@@ -107,23 +107,43 @@ def main() -> None:
     if params.logo_wanted:
         img = add_logo(img, added_frame_px)
 
-    print(type(superscale(img)))
+    print(params.superscale_wanted)
+    if params.superscale_wanted:
+        img = superscale(img)
 
     img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
 
 
-def superscale(img: Image.Image, scal_factor: int = 2) -> Image.Image:
+def superscale(img: Image.Image, scal_factor: int = 4, model_name: str = 'lapsrn') -> Image.Image:
+    """Performs upscaling with superresolution neural networks.
+    At the moment, OpenCV offers four models, three of which you can choose here:
+    LAPSRN, ESPCN, FSRCNN. Which can upscale by the factor of 4.
+    Other versions can be downloaded too, the EDSR model is too large and too slow.
+
+    Quellen:
+    https://towardsdatascience.com/deep-learning-based-super-resolution-with-opencv-4fd736678066
+    https://docs.opencv.org/master/d5/d29/tutorial_dnn_superres_upscale_image_single.html
+
+
+    Args:
+        img (Image.Image): Image to be upscaled.
+        scal_factor (int, optional): Factor by which the input image will be upscaled. Defaults to 4.
+        model_name (str, optional): The name of the model you want to use, available are lapsrn, espcn
+        and fsrcnn. Defaults to lapsrn.
+
+    Returns:
+        Image.Image: [description]
+    """
     superscaler = dnn_superres.DnnSuperResImpl_create()
-    model_path = os.path.join('data', 'models', f'EDSR_x{scal_factor}.pb')
+    model_path = os.path.join('data', 'models', f'{model_name.upper()}_x{scal_factor}.pb')
     superscaler.readModel(model_path)
-    superscaler.setModel('edsr', scal_factor)
+    superscaler.setModel(model_name, scal_factor)
 
     img = img.convert('RGB')
-    # scaled_img = superscaler.upsample(np.array(img))
     img = np.array(img)
+    img = superscaler.upsample(img)
     img = Image.fromarray(img.astype('uint8'), 'RGB')
     return img
-    # return scaled_img
 
 # --- Functions placing the raw map into the later total image ----------------
 def crop_map(img: Image.Image, cropping: Tuple[float, float, float, float]) -> Image.Image:

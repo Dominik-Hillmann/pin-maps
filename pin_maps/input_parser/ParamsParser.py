@@ -81,6 +81,11 @@ class ParamsParser:
             action = 'store_true',
             help = 'Use if you do not want the logo at the bottom.'
         )
+        parser.add_argument(
+            '--superscale',
+            action = 'store_true',
+            help = "Set, if you want to upscale the image by the factor 4."
+        )
 
         self.__parsed_args = vars(parser.parse_args())
         print(self.__parsed_args)
@@ -181,3 +186,8 @@ class ParamsParser:
     @property
     def logo_wanted(self) -> bool:
         return not self.__parsed_args['nologo']
+
+
+    @property
+    def superscale_wanted(self) -> bool:
+        return self.__parsed_args['superscale']
