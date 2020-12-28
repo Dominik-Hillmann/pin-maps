@@ -40,5 +40,10 @@
 
     "fonts": {
         "crimson": "crimson.ttf"
+    },
+
+    "general": {    
+        "height-text-space": 930,
+        "added-frame-px": 150
     }
 }

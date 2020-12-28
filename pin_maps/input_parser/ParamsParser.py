@@ -191,3 +191,13 @@ class ParamsParser:
     @property
     def superscale_wanted(self) -> bool:
         return self.__parsed_args['superscale']
+
+
+    @property
+    def added_frame_px(self) -> int:
+        return self.__config['general']['added-frame-px']
+
+
+    @property
+    def height_text_space(self) -> int:
+        return self.__config['general']['height-text-space']

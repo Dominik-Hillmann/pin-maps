@@ -1,42 +1,17 @@
 #!/usr/bin/env python
 """This program designs posters of maps with pins and undertitles."""
 
-
-
-
-
-
-
-
-
-# Upscaling redbubble
-# import cv2
-from cv2 import dnn_superres
-import numpy as np
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Internal modules
 from input_parser.ParamsParser import ParamsParser
-from transforms.AddShadow import AddShadow
-from transforms.BackgroundDeletion import BackgroundDeletion
-from transforms.Ribbon import Ribbon
-from transforms.OffsetLettering import OffsetLettering
-from transforms.Scale import Scale
-from transforms.Cutout import Cutout
+from heraldry_transforms.AddShadow import AddShadow
+from heraldry_transforms.BackgroundDeletion import BackgroundDeletion
+from heraldry_transforms.Ribbon import Ribbon
+from heraldry_transforms.OffsetLettering import OffsetLettering
+from heraldry_transforms.Scale import Scale
+from heraldry_transforms.Cutout import Cutout
+from complete_image_transforms.CompleteImageTransform import CompleteImageTransform
+from complete_image_transforms.Superscale import Superscale
+from complete_image_transforms.Frame import Frame
 from draw.Map import Map
 from draw.Pin import Pin
 # Python libraries
@@ -58,8 +33,8 @@ def main() -> None:
     params = ParamsParser()
     create_output_dir()    
 
-    height_text_space = 930
-    added_frame_px = 150
+    # height_text_space = 930
+    # added_frame_px = 150
 
     # --- Map creation and pin setting ----------------------------------------
     img_transforms = [BackgroundDeletion(), Cutout(), Scale(110), AddShadow()]
@@ -86,13 +61,12 @@ def main() -> None:
 
     # --- Embedding into larger image and setting of heading ------------------
     _, height_map = img.size
-    img = add_text_space(img, height_text_space)
+    img = add_text_space(img, params.height_text_space)
 
     font_heading = get_sized_font(params.head_font_path, params.heading, img.width)
-    end_y_heading = write_header(img, params.heading, font_heading, height_map, added_frame_px)
+    end_y_heading = write_header(img, params.heading, font_heading, height_map, params.added_frame_px)
 
     # --- Embeds main text ----------------------------------------------------
-    # t = 'Aufgewachsen in Köln und Magdeburg, verliebt in München, zusammengezogen nach Heidelberg. Ich werde Dich für immer lieben!'
     font_height_heading = font_heading.getsize(params.heading)[1]
 
     main_text_font = ImageFont.truetype(params.main_font_path, 70)
@@ -103,47 +77,28 @@ def main() -> None:
         write_main_text(img, params.body, main_text_font, end_y_heading)
 
     # --- Sets a frame around image and saves ---------------------------------
-    img = frame_img(img, added_frame_px, params.border_wanted)
-    if params.logo_wanted:
-        img = add_logo(img, added_frame_px)
+    # img = frame_img(img, added_frame_px, params.border_wanted)
+    # if params.logo_wanted:
+    #     img = add_logo(img, added_frame_px)
 
-    print(params.superscale_wanted)
-    if params.superscale_wanted:
-        img = superscale(img)
+    print('Superscaling wanted: ' + str(params.superscale_wanted))
+    complete_img_transforms = get_complete_img_transforms(params)
+    for transform in complete_img_transforms:
+        img = transform(img)
 
     img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
 
 
-def superscale(img: Image.Image, scal_factor: int = 4, model_name: str = 'lapsrn') -> Image.Image:
-    """Performs upscaling with superresolution neural networks.
-    At the moment, OpenCV offers four models, three of which you can choose here:
-    LAPSRN, ESPCN, FSRCNN. Which can upscale by the factor of 4.
-    Other versions can be downloaded too, the EDSR model is too large and too slow.
+def get_complete_img_transforms(params: ParamsParser) -> List[CompleteImageTransform]:
+    transforms = [
+        Frame(params.added_frame_px, params.border_wanted)
+    ]
 
-    Quellen:
-    https://towardsdatascience.com/deep-learning-based-super-resolution-with-opencv-4fd736678066
-    https://docs.opencv.org/master/d5/d29/tutorial_dnn_superres_upscale_image_single.html
-
-
-    Args:
-        img (Image.Image): Image to be upscaled.
-        scal_factor (int, optional): Factor by which the input image will be upscaled. Defaults to 4.
-        model_name (str, optional): The name of the model you want to use, available are lapsrn, espcn
-        and fsrcnn. Defaults to lapsrn.
-
-    Returns:
-        Image.Image: [description]
-    """
-    superscaler = dnn_superres.DnnSuperResImpl_create()
-    model_path = os.path.join('data', 'models', f'{model_name.upper()}_x{scal_factor}.pb')
-    superscaler.readModel(model_path)
-    superscaler.setModel(model_name, scal_factor)
-
-    img = img.convert('RGB')
-    img = np.array(img)
-    img = superscaler.upsample(img)
-    img = Image.fromarray(img.astype('uint8'), 'RGB')
-    return img
+    if params.superscale_wanted:
+        transforms.append(Superscale())
+    
+    return transforms
+    
 
 # --- Functions placing the raw map into the later total image ----------------
 def crop_map(img: Image.Image, cropping: Tuple[float, float, float, float]) -> Image.Image:
@@ -327,48 +282,48 @@ def write_main_text_with_heraldry(
 
 
 # --- Functions adding last details to the image ------------------------------
-def frame_img(img: Image.Image, added_frame_px: int, border_wanted: bool, border_thickness: int = 3) -> Image.Image:
-    orig_width, orig_height = img.size
-    new_frame_height = orig_height + added_frame_px
-    new_frame_width = (12 / 18) * (orig_height + added_frame_px)
-    if new_frame_width < orig_width:
-        raise ValueError(f'Neue Breite ist kleiner als alte {new_frame_width} zu {orig_width}.')
+# def frame_img(img: Image.Image, added_frame_px: int, border_wanted: bool, border_thickness: int = 3) -> Image.Image:
+#     orig_width, orig_height = img.size
+#     new_frame_height = orig_height + added_frame_px
+#     new_frame_width = (12 / 18) * (orig_height + added_frame_px)
+#     if new_frame_width < orig_width:
+#         raise ValueError(f'Neue Breite ist kleiner als alte {new_frame_width} zu {orig_width}.')
         
-    frame_dims = (round(new_frame_width), round(new_frame_height))
-    framed_img = Image.new(img.mode, frame_dims, (255, ) * 3)
+#     frame_dims = (round(new_frame_width), round(new_frame_height))
+#     framed_img = Image.new(img.mode, frame_dims, (255, ) * 3)
 
-    addtional_width = round(new_frame_width - orig_width)
-    pasting_pos = (round(addtional_width / 2), round(added_frame_px / 2))
-    framed_img.paste(img, pasting_pos)
+#     addtional_width = round(new_frame_width - orig_width)
+#     pasting_pos = (round(addtional_width / 2), round(added_frame_px / 2))
+#     framed_img.paste(img, pasting_pos)
     
-    if border_wanted:
-        half_frame_px = round(added_frame_px / 2) # Halbe Breits des Rands
-        upper_left_corner = (half_frame_px, ) * 2
-        upper_right_corner = (new_frame_width - half_frame_px, half_frame_px)
-        lower_left_corner = (half_frame_px, new_frame_height - half_frame_px)
-        lower_right_corner = (new_frame_width - half_frame_px, new_frame_height - half_frame_px)
-        shape = [upper_left_corner, upper_right_corner, lower_right_corner, lower_left_corner, upper_left_corner]
+#     if border_wanted:
+#         half_frame_px = round(added_frame_px / 2) # Halbe Breits des Rands
+#         upper_left_corner = (half_frame_px, ) * 2
+#         upper_right_corner = (new_frame_width - half_frame_px, half_frame_px)
+#         lower_left_corner = (half_frame_px, new_frame_height - half_frame_px)
+#         lower_right_corner = (new_frame_width - half_frame_px, new_frame_height - half_frame_px)
+#         shape = [upper_left_corner, upper_right_corner, lower_right_corner, lower_left_corner, upper_left_corner]
 
-        drawing = ImageDraw.Draw(framed_img)
-        drawing.line(shape, width = border_thickness, fill = 'black')
+#         drawing = ImageDraw.Draw(framed_img)
+#         drawing.line(shape, width = border_thickness, fill = 'black')
     
-    return framed_img
+#     return framed_img
 
 
-def add_logo(img: Image.Image, added_frame_px: int) -> Image.Image:
-    logo = Image.open(os.path.join('data', 'img', 'brainrain-logo-lang.jpg'))
-    logo = logo.resize(proportional_size(50, logo))
-    logo_width, logo_height = logo.size
+# def add_logo(img: Image.Image, added_frame_px: int) -> Image.Image:
+#     logo = Image.open(os.path.join('data', 'img', 'brainrain-logo-lang.jpg'))
+#     logo = logo.resize(proportional_size(50, logo))
+#     logo_width, logo_height = logo.size
     
-    half_img_width = round(img.width / 2)
-    half_logo_width = round(logo_width / 2)
-    paste_pos = (
-        half_img_width - half_logo_width, 
-        img.height - logo_height - 50
-    )
-    img.paste(logo, paste_pos)
+#     half_img_width = round(img.width / 2)
+#     half_logo_width = round(logo_width / 2)
+#     paste_pos = (
+#         half_img_width - half_logo_width, 
+#         img.height - logo_height - 50
+#     )
+#     img.paste(logo, paste_pos)
 
-    return img
+#     return img
 
     
 # --- Utility functions -------------------------------------------------------

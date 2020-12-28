@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw
 # Internal modules
 from input_parser.Coordinates import Coordinates
-from transforms.ImageTransform import ImageTransform
+from heraldry_transforms.ImageTransform import ImageTransform
 # Typing
 from typing import Union, Tuple, List
 
