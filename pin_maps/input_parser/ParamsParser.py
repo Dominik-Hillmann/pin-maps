@@ -201,3 +201,8 @@ class ParamsParser:
     @property
     def height_text_space(self) -> int:
         return self.__config['general']['height-text-space']
+
+    
+    @property
+    def undertitle_line_spacing(self) -> int:
+        return self.__config['general']['undertitle-line-spacing']

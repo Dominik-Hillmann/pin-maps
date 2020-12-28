@@ -8,3 +8,4 @@ __pycache__/
 /output/raw-*
 /data/gimp/
 *.sw*
+.VSCodeCounter

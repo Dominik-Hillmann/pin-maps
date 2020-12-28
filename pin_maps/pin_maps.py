@@ -12,6 +12,7 @@ from heraldry_transforms.Cutout import Cutout
 from complete_image_transforms.CompleteImageTransform import CompleteImageTransform
 from complete_image_transforms.Superscale import Superscale
 from complete_image_transforms.Frame import Frame
+from complete_image_transforms.Logo import Logo
 from draw.Map import Map
 from draw.Pin import Pin
 # Python libraries
@@ -31,13 +32,11 @@ random.seed(69)
 
 def main() -> None:
     params = ParamsParser()
-    create_output_dir()    
-
-    # height_text_space = 930
-    # added_frame_px = 150
+    create_output_dir()
 
     # --- Map creation and pin setting ----------------------------------------
     img_transforms = [BackgroundDeletion(), Cutout(), Scale(110), AddShadow()]
+    # TODO Cropping und Koordination des Kartenausschnitts in die config.json
     germany = Map('de-neg.shp', 'old-topo.png', [5.32, 15.55, 47.2, 56.2])
     
     for location in params.locations:
@@ -55,6 +54,7 @@ def main() -> None:
     germany.save(raw_img_name)
 
     # --- Map cropping --------------------------------------------------------
+    # TODO Cropping und Koordination des Kartenausschnitts in die config.json
     cropping = (300, 650, 1760, 2525) # (left, top, right, bottom)
     img = Image.open(os.path.join('output', raw_img_name))    
     img = crop_map(img, cropping)
@@ -72,41 +72,43 @@ def main() -> None:
     main_text_font = ImageFont.truetype(params.main_font_path, 70)
     if params.text_coats:
         town_names = [location.name.lower() for location in params.locations]
-        write_main_text_with_heraldry(img, params.body, main_text_font, 30, town_names, end_y_heading)
+        write_main_text_with_heraldry(img, params.body, main_text_font, params.undertitle_line_spacing, town_names, end_y_heading)
     else:
-        write_main_text(img, params.body, main_text_font, end_y_heading)
+        write_main_text(img, params.body, main_text_font, end_y_heading, params.undertitle_line_spacing)
 
-    # --- Sets a frame around image and saves ---------------------------------
-    # img = frame_img(img, added_frame_px, params.border_wanted)
-    # if params.logo_wanted:
-    #     img = add_logo(img, added_frame_px)
-
-    print('Superscaling wanted: ' + str(params.superscale_wanted))
+    # --- Edits of the complete image -----------------------------------------
     complete_img_transforms = get_complete_img_transforms(params)
     for transform in complete_img_transforms:
         img = transform(img)
 
     img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
-
-
-def get_complete_img_transforms(params: ParamsParser) -> List[CompleteImageTransform]:
-    transforms = [
-        Frame(params.added_frame_px, params.border_wanted)
-    ]
-
-    if params.superscale_wanted:
-        transforms.append(Superscale())
-    
-    return transforms
     
 
 # --- Functions placing the raw map into the later total image ----------------
 def crop_map(img: Image.Image, cropping: Tuple[float, float, float, float]) -> Image.Image:
+    """Crops the raw map such that there is no white space around it.
+
+    Args:
+        img (Image.Image): The image to be cropped.
+        cropping (Tuple[float, float, float, float]): Croppings.
+
+    Returns:
+        Image.Image: The cropped image.
+    """
     img = img.crop(cropping)    
     return img
 
 
 def add_text_space(img: Image.Image, added_text_height: int) -> Image.Image:
+    """Adds a space where text can be placed under the raw map.
+
+    Args:
+        img (Image.Image): The image where the space will be added.
+        added_text_height (int): The height of the space in pixels.
+
+    Returns:
+        Image.Image: The image with text space added.
+    """
     width_cropped, height_cropped = img.size
     dims_with_text = (width_cropped, height_cropped + added_text_height)
     img_text = Image.new(img.mode, dims_with_text, color = (255, ) * 3)
@@ -124,6 +126,19 @@ def write_header(
     frame_width: int,
     adjustment: int = -150
 ) -> int:
+    """Inserts the header into the image.
+
+    Args:
+        img (Image.Image): The image where the header will be inserted.
+        text (str): The text to be inserted.
+        font (ImageFont.ImageFont): The font used for the heading.
+        height_map_part (int): The height of the raw map.
+        frame_width (int): The width of the frame.
+        adjustment (int, optional): Adjustment to the height. Defaults to -150.
+
+    Returns:
+        int: The lowest y position to which the heading reaches.
+    """
     draw = ImageDraw.Draw(img)
     start_y_heading = height_map_part + frame_width + adjustment 
     draw.text((0, start_y_heading), text, 'black', font)
@@ -136,6 +151,17 @@ def write_header(
 
 # --- Functions concerned with writing the main undertitles (not heading) -----
 def pattern_2nd_text(text: str, img_width: int, font: ImageFont, line_dist: int = 10) -> List[Tuple[int, str]]:
+    """Creates the pattern of the undertitles.
+
+    Args:
+        text (str): The text to be inserted as undertitles.
+        img_width (int): The width of the image.
+        font (ImageFont): The font used for undertitles.
+        line_dist (int, optional): Distance between lines. Defaults to 10.
+
+    Returns:
+        List[Tuple[int, str]]: The pattern.
+    """ 
     lines = []
     starts = []
     text = text.split(' ')
@@ -165,6 +191,21 @@ def pattern_2nd_text_with_coats(
     town_names: List[str],
     coats_width: int = 150
 ) -> List[Tuple[bool, List[str]]]:
+    """Creates the pattern of the undertitles including coats of arms.
+
+    Args:
+        text (str): The text to be inserted as undertitles.
+        img (Image.Image): The image into which undertitles will be inserted.
+        font (ImageFont.ImageFont): The font of the undertitles.
+        line_spacing (int): The spacing between lines in pixels.
+        town_names (List[str]): The list of the names of the towns for which 
+        heraldry is provided.
+        coats_width (int, optional): The width of the coats of arms in the text. 
+        Defaults to 150.
+
+    Returns:
+        List[Tuple[bool, List[str]]]: The pattern.
+    """
     pattern = []
     for start_x, line in pattern_2nd_text(text, img.width - coats_width, font, line_spacing):
         words = line.split(' ')
@@ -187,19 +228,15 @@ def pattern_2nd_text_with_coats(
     return pattern
 
 
-def calc_pattern_size(
-    pattern: Union[List[Tuple[int, str]], List[Tuple[bool, List[str]]]],
-    line_spacing: int = 30
-) -> Tuple[int, int]:
-    if type(pattern[0][0]) is int:
-        pass
-    elif type(patter[0][0]) is bool:
-        pass
-    else:
-        pass
-
-
 def compile_to_line(line_pattern: List[Tuple[bool, List[str]]]) -> List[Union[Image.Image, str]]:
+    """Will convert the pattern into actial lines.
+
+    Args:
+        line_pattern (List[Tuple[bool, List[str]]]): The pattern to be compiled.
+
+    Returns:
+        List[Union[Image.Image, str]]: The lines as list of images and strings.
+    """
     written_line = []
     for coat_wanted, words in line_pattern:
         if coat_wanted:
@@ -214,8 +251,20 @@ def write_main_text(
     text: str,
     font: ImageFont.ImageFont,
     end_y_heading: int,
-    line_spacing: int = 30
-) -> Image.Image:
+    line_spacing: int
+) -> None:
+    """Inserts the undertitles into the image.
+
+    Args:
+        img (Image.Image): The image into which undertitles will be inserted.
+        text (str): The text to be inserted.
+        font (ImageFont.ImageFont): The font used for the inserted text.
+        end_y_heading (int): The lowest y of the heading.
+        line_spacing (int, optional): Spacing between lines. Defaults to 30.
+
+    Returns:
+        Image.Image: The image into which undertitles are inserted.
+    """
     img_width, img_height = img.size
     draw = ImageDraw.Draw(img)
 
@@ -227,8 +276,6 @@ def write_main_text(
         draw_pos = (vert_start, start_y)
         draw.text(draw_pos, line, (0, ) * 3, font)
         start_y += font_height + line_spacing
-    
-    return img
 
 
 def write_main_text_with_heraldry(
@@ -240,6 +287,16 @@ def write_main_text_with_heraldry(
     end_y_heading: int, # The y position at which the heading ends.
     coat_text_gap: int = 15
 ) -> None:
+    """Inserts the undertitles into the image uncluding heraldry.
+
+    Args:
+        img (Image.Image): The image into which undertitles will be inserted.
+        text (str): The text to be inserted.
+        font (ImageFont.ImageFont): The font used for the inserted text.
+        line_spacing (int): Spacing between lines.
+        town_names (List[str]): The town names for which coats are provided.
+        end_y_heading (int): The lowest y position of the heading.
+    """
     _, font_height = font.getsize('Tg')
     
     start_y = end_y_heading + line_spacing
@@ -256,7 +313,6 @@ def write_main_text_with_heraldry(
         
         added_width_of_line_by_coat.append(added_width_in_this_line)
 
-    print(added_width_of_line_by_coat)
     for iter_num, (start_x, line_pattern, num_coats) in enumerate(complete_text_pattern):
         added_coat_width = added_width_of_line_by_coat[iter_num]
         print(max(added_width_of_line_by_coat) - added_coat_width)
@@ -281,51 +337,27 @@ def write_main_text_with_heraldry(
         start_y += font_height + line_spacing
 
 
-# --- Functions adding last details to the image ------------------------------
-# def frame_img(img: Image.Image, added_frame_px: int, border_wanted: bool, border_thickness: int = 3) -> Image.Image:
-#     orig_width, orig_height = img.size
-#     new_frame_height = orig_height + added_frame_px
-#     new_frame_width = (12 / 18) * (orig_height + added_frame_px)
-#     if new_frame_width < orig_width:
-#         raise ValueError(f'Neue Breite ist kleiner als alte {new_frame_width} zu {orig_width}.')
-        
-#     frame_dims = (round(new_frame_width), round(new_frame_height))
-#     framed_img = Image.new(img.mode, frame_dims, (255, ) * 3)
+# --- Functions for edits concerning the complete image -----------------------
+def get_complete_img_transforms(params: ParamsParser) -> List[CompleteImageTransform]:
+    """Creates the list of transformations applied to the complete image.
 
-#     addtional_width = round(new_frame_width - orig_width)
-#     pasting_pos = (round(addtional_width / 2), round(added_frame_px / 2))
-#     framed_img.paste(img, pasting_pos)
+    Args:
+        params (ParamsParser): The command line parameters.
+
+    Returns:
+        List[CompleteImageTransform]: The list of transformations.
+    """
+    transforms = [Frame(params.added_frame_px, params.border_wanted)]
+
+    if params.logo_wanted:
+        transforms.append(Logo())
+
+    if params.superscale_wanted:
+        transforms.append(Superscale())
     
-#     if border_wanted:
-#         half_frame_px = round(added_frame_px / 2) # Halbe Breits des Rands
-#         upper_left_corner = (half_frame_px, ) * 2
-#         upper_right_corner = (new_frame_width - half_frame_px, half_frame_px)
-#         lower_left_corner = (half_frame_px, new_frame_height - half_frame_px)
-#         lower_right_corner = (new_frame_width - half_frame_px, new_frame_height - half_frame_px)
-#         shape = [upper_left_corner, upper_right_corner, lower_right_corner, lower_left_corner, upper_left_corner]
-
-#         drawing = ImageDraw.Draw(framed_img)
-#         drawing.line(shape, width = border_thickness, fill = 'black')
-    
-#     return framed_img
+    return transforms
 
 
-# def add_logo(img: Image.Image, added_frame_px: int) -> Image.Image:
-#     logo = Image.open(os.path.join('data', 'img', 'brainrain-logo-lang.jpg'))
-#     logo = logo.resize(proportional_size(50, logo))
-#     logo_width, logo_height = logo.size
-    
-#     half_img_width = round(img.width / 2)
-#     half_logo_width = round(logo_width / 2)
-#     paste_pos = (
-#         half_img_width - half_logo_width, 
-#         img.height - logo_height - 50
-#     )
-#     img.paste(logo, paste_pos)
-
-#     return img
-
-    
 # --- Utility functions -------------------------------------------------------
 def create_output_dir() -> None:
     """Creates a new output directory, if there is none."""
@@ -335,10 +367,29 @@ def create_output_dir() -> None:
 
 
 def town_formatting(town_name: str) -> str:
+    """Formats the town name (first letter upper case) and deletion of special
+    symbols.
+
+    Args:
+        town_name (str): The town name to be formatted.
+
+    Returns:
+        str: The formatted town name.
+    """
     return town_name.lower().strip('.?,!:;-%()"\'$€/')
 
 
-def get_sized_font(font_path: str, text: str, img_width: int) -> Tuple[ImageFont.ImageFont, int]:
+def get_sized_font(font_path: str, text: str, img_width: int) -> ImageFont.ImageFont:
+    """Creates a fitting font.
+
+    Args:
+        font_path (str): The path to the font file (*.ttf).
+        text (str): The text for which font should be found.
+        img_width (int): The width of the image where text will be inserted.
+
+    Returns:
+        ImageFont.ImageFont: The fitting font.
+    """
     font_size = 500 # Arbitrary but high start value
     font = ImageFont.truetype(font_path, font_size)
     font_width, _ = font.getsize(text) 
@@ -351,11 +402,28 @@ def get_sized_font(font_path: str, text: str, img_width: int) -> Tuple[ImageFont
     return font
 
 
-def get_coat_from_cache(town_name):
+def get_coat_from_cache(town_name: str) -> Image.Image:
+    """Returns the coat of arms as retrieved from the cache.
+
+    Args:
+        town_name (str): The name of the coat of arms.
+
+    Returns:
+        Image.Image: The coat of arms.
+    """
     return Image.open(os.path.join('data', 'img', 'pin-cache', f'{town_name}-pin.png'))
 
 
-def proportional_size(set_height, img) -> Tuple[int, int]:
+def proportional_size(set_height: int, img: Image.Image) -> Tuple[int, int]:
+    """Computes the new size of the image proportional to new height (`set_height`).
+
+    Args:
+        set_height (int): The height for which you search proportional dimensions.
+        img (Image.Image): The images with original dimensions.
+
+    Returns:
+        Tuple[int, int]: The proportional new size.
+    """
     current_w, current_h = img.size
     max_w, max_h = current_w, set_height,
     resize_ratio = min(max_w / current_w, max_h / current_h)
