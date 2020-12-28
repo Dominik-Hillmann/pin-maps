@@ -70,6 +70,7 @@ def main() -> None:
     font_height_heading = font_heading.getsize(params.heading)[1]
 
     main_text_font = ImageFont.truetype(params.main_font_path, 70)
+    # start_y_undertitles = calc_start_y_undertitles(img, params.body, main_text_font, end_y_heading, params.undertitle_line_spacing, params.text_coats)
     if params.text_coats:
         town_names = [location.name.lower() for location in params.locations]
         write_main_text_with_heraldry(img, params.body, main_text_font, params.undertitle_line_spacing, town_names, end_y_heading)
@@ -82,7 +83,7 @@ def main() -> None:
         img = transform(img)
 
     img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
-    
+
 
 # --- Functions placing the raw map into the later total image ----------------
 def crop_map(img: Image.Image, cropping: Tuple[float, float, float, float]) -> Image.Image:
@@ -228,8 +229,51 @@ def pattern_2nd_text_with_coats(
     return pattern
 
 
+def calc_start_y_undertitles(
+    img: Image.Image, 
+    undertitles_text: str, 
+    undertitles_font: ImageFont.ImageFont,
+    end_y_heading: int,
+    line_spacing: int,
+    town_names: Union[None, List[str]]
+) -> int:
+    """Calculates where to put the undertitles.
+
+    Args:
+        img (Image.Image): The image into which the undertitles will be put.
+        undertitles_text (str): The undertitle as string.
+        undertitles_font (ImageFont.ImageFont): The font of the undertitles.
+        end_y_heading (int): The lowest y position of the heading.
+        line_spacing (int): The spacing between the lines of the undertitles.
+        town_names (Union[None, List[str]]): The names of possible towns.
+
+    Returns:
+        int: The y position at which the undertitles to start.
+    """
+    img_width, img_height = img.size
+    empty_height = img_height - end_y_heading
+
+    coats_wanted = town_names is not None
+    if coats_wanted:
+        pattern = pattern_2nd_text_with_coats(undertitles_text, img, undertitles_font, line_spacing, town_names)
+        lines = [compile_to_line(line) for _, line, _ in pattern]
+    else:
+        pattern = pattern_2nd_text(undertitles_text, img.width, undertitles_font, line_dist = line_spacing)    
+        lines = [line for _, line in pattern]
+
+    num_lines = len(lines)
+    num_gaps = num_lines - 1
+    _, line_height = undertitles_font.getsize('Tg')
+
+    undertitles_height = line_height * num_lines + line_spacing * num_gaps
+    assert empty_height > undertitles_height
+    diff = empty_height - undertitles_height
+
+    return round(diff / 2)
+
+
 def compile_to_line(line_pattern: List[Tuple[bool, List[str]]]) -> List[Union[Image.Image, str]]:
-    """Will convert the pattern into actial lines.
+    """Will convert the pattern into actual lines.
 
     Args:
         line_pattern (List[Tuple[bool, List[str]]]): The pattern to be compiled.
@@ -268,7 +312,9 @@ def write_main_text(
     img_width, img_height = img.size
     draw = ImageDraw.Draw(img)
 
-    start_y = end_y_heading + line_spacing
+    # start_y = end_y_heading + line_spacing
+    # TODO hier start y einsetzen
+    start_y = calc_start_y_undertitles(img, text, font, end_y_heading, line_spacing, None) + end_y_heading
     font_width, font_height = font.getsize(text)
     
     pattern = pattern_2nd_text(text, img_width, font)
@@ -299,7 +345,8 @@ def write_main_text_with_heraldry(
     """
     _, font_height = font.getsize('Tg')
     
-    start_y = end_y_heading + line_spacing
+    # start_y = end_y_heading + line_spacing TODO hier start_y einsetzen
+    start_y = calc_start_y_undertitles(img, text, font, end_y_heading, line_spacing, town_names) + end_y_heading
     complete_text_pattern = pattern_2nd_text_with_coats(text, img, font, line_spacing, town_names)
     
     added_width_of_line_by_coat = []
