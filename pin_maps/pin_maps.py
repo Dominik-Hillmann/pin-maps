@@ -394,13 +394,18 @@ def get_complete_img_transforms(params: ParamsParser) -> List[CompleteImageTrans
     Returns:
         List[CompleteImageTransform]: The list of transformations.
     """
-    transforms = [Frame(params.added_frame_px, params.border_wanted)]
+    transforms = []
+
+    frame_transform = Frame(params.added_frame_px, params.border_wanted)
+    transforms.append(frame_transform)
 
     if params.logo_wanted:
-        transforms.append(Logo())
+        logo_transform = Logo(params.logo_height, params.added_frame_px)
+        transforms.append(logo_transform)
 
     if params.superscale_wanted:
-        transforms.append(Superscale())
+        superscale_transform = Superscale()
+        transforms.append(superscale_transform)
     
     return transforms
 

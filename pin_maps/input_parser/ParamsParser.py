@@ -206,3 +206,13 @@ class ParamsParser:
     @property
     def undertitle_line_spacing(self) -> int:
         return self.__config['general']['undertitle-line-spacing']
+
+    
+    @property
+    def logo_height(self) -> int:
+        """The height of the logo at the lower image end.
+
+        Returns:
+            int: The height.
+        """
+        return self.__config['general']['logo-height']

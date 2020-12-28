@@ -45,6 +45,7 @@
     "general": {    
         "height-text-space": 930,
         "added-frame-px": 150,
-        "undertitle-line-spacing": 30
+        "undertitle-line-spacing": 30,
+        "logo-height": 30
     }
 }
