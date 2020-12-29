@@ -2,19 +2,8 @@
     "countries": {
         "de": {
             "shapefile": "de-neg.shp",
-            "background-extent": [],
             "aspect-ratio": 1.2,
-            "wallpapers": {
-                "old": {
-                    "filename": "old-cut.png",
-                    "extent": [5.82, 15.12, 47.19, 55.31],
-                    "shaped": false
-                }, 
-                "space": {
-                    "filename": "space.png",
-                    "extent": [5.5, 15.3, 47.0, 55.5],
-                    "shaped": true
-                }, 
+            "wallpapers": { 
                 "old-topo": {
                     "filename": "old-topo.png",
                     "extent": [5.82, 15.12, 47.19, 55.31],

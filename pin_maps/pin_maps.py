@@ -266,7 +266,7 @@ def calc_start_y_undertitles(
     _, line_height = undertitles_font.getsize('Tg')
 
     undertitles_height = line_height * num_lines + line_spacing * num_gaps
-    assert empty_height > undertitles_height
+    # assert empty_height > undertitles_height
     diff = empty_height - undertitles_height
 
     return round(diff / 2)
