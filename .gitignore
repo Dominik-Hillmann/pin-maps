@@ -9,3 +9,4 @@ __pycache__/
 /data/gimp/
 *.sw*
 .VSCodeCounter
+.env

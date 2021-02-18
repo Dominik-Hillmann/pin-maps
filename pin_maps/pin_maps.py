@@ -166,20 +166,54 @@ def pattern_2nd_text(text: str, img_width: int, font: ImageFont, line_dist: int 
     lines = []
     starts = []
     text = text.split(' ')
+    last_word = text[len(text) - 1]
+    # text.reverse()
 
-    while len(text) > 0:
-        this_line = deepcopy(text)
-        line_width, line_height = font.getsize(' '.join(this_line))
-        
-        while line_width > img_width:
-            this_line.pop()
-            line_width, line_height = font.getsize(' '.join(this_line))
+    # NEUER PARAMETER, der Y_START des Textes adjustiert
+    # print('TESTSPLIT ' + str(text))
+    # [print('\\n' == x, x) for x in text]
+    line = [text[0]]
+    newline = False
+    for i in range(len(text) - 1):
+        if newline:
+            newline = False 
+            continue
 
-        lines.append(' '.join(this_line))
-        starts.append(round((img_width - line_width) / 2))
+        word = text[i]
+        next_word = text[i + 1]
+
+        # Intentional new line
+        if next_word == '\\n':
+            compiled_current_line = ' '.join(line)
+            lines.append(compiled_current_line)
+            current_line_width, _ = font.getsize(compiled_current_line)
+            starts.append(round((img_width - current_line_width) / 2))
+            # Do not include the \n in the text
+            newline = True
+            line = [text[i + 2]]
+            continue
+
+        compiled_projected_line = ' '.join(line + [next_word])
+        projected_line_width, line_height = font.getsize(compiled_projected_line)
+        if not projected_line_width > img_width:
+            line.append(next_word) 
         
-        for _ in this_line:
-            text.pop(0)
+        else:
+            # The next word has to start the next line, if it makes the 
+            # current line too large.
+            compiled_current_line = ' '.join(line)
+            lines.append(compiled_current_line)
+            current_line_width, _ = font.getsize(compiled_current_line)
+            starts.append(round((img_width - current_line_width) / 2))
+            # Empty line and start with word that does not currently fit in.
+            line = [next_word]
+
+        # Otherwise last line will be forgotten since it is not larger than img_width.
+        if next_word == last_word:
+            compiled_current_line = ' '.join(line)
+            lines.append(compiled_current_line)
+            current_line_width, _ = font.getsize(compiled_current_line)
+            starts.append(round((img_width - current_line_width) / 2))
 
     return list(zip(starts, lines))
 

@@ -22,6 +22,7 @@ Aside from these, optional command line parameters are:
 * `--noborder`: If set will not draw a border around the complete image.
 * `--nologo`: If set will not draw the logo at the poster's bottom.
 * `--superscale`: Will scale the complete image by a factor of 4 if set.
+* TODO noch erwähnen, dass `\n` im Text Zeilenumbruch verursacht
 
 ## Configuration
 You can configure the program over all runs in the `config.json`.
