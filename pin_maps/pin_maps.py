@@ -59,28 +59,36 @@ def main() -> None:
     img = Image.open(os.path.join('output', raw_img_name))    
     img = crop_map(img, cropping)
 
-    # --- Embedding into larger image and setting of heading ------------------
-    _, height_map = img.size
-    img = add_text_space(img, params.height_text_space)
+    # Hier in den Spaß in zwei Funktionen aufteilen, die eine 
+    # Neue Klasse TextArea
 
-    font_heading = get_sized_font(params.head_font_path, params.heading, img.width)
-    end_y_heading = write_header(img, params.heading, font_heading, height_map, params.added_frame_px)
+    img = Frame(params.added_frame_px, params.border_wanted)(img)
 
-    # --- Embeds main text ----------------------------------------------------
-    font_height_heading = font_heading.getsize(params.heading)[1]
+    # if params.heading is None and params.body is None:
+    #     pass
 
-    main_text_font = ImageFont.truetype(params.main_font_path, 70)
-    # start_y_undertitles = calc_start_y_undertitles(img, params.body, main_text_font, end_y_heading, params.undertitle_line_spacing, params.text_coats)
-    if params.text_coats:
-        town_names = [location.name.lower() for location in params.locations]
-        write_main_text_with_heraldry(img, params.body, main_text_font, params.undertitle_line_spacing, town_names, end_y_heading)
-    else:
-        write_main_text(img, params.body, main_text_font, end_y_heading, params.undertitle_line_spacing)
+    # # --- Embedding into larger image and setting of heading ------------------
+    # _, height_map = img.size
+    # img = add_text_space(img, params.height_text_space)
 
-    # --- Edits of the complete image -----------------------------------------
-    complete_img_transforms = get_complete_img_transforms(params)
-    for transform in complete_img_transforms:
-        img = transform(img)
+    # font_heading = get_sized_font(params.head_font_path, params.heading, img.width)
+    # end_y_heading = write_header(img, params.heading, font_heading, height_map, params.added_frame_px)
+
+    # # --- Embeds main text ----------------------------------------------------
+    # font_height_heading = font_heading.getsize(params.heading)[1]
+
+    # main_text_font = ImageFont.truetype(params.main_font_path, 70)
+    # # start_y_undertitles = calc_start_y_undertitles(img, params.body, main_text_font, end_y_heading, params.undertitle_line_spacing, params.text_coats)
+    # if params.text_coats:
+    #     town_names = [location.name.lower() for location in params.locations]
+    #     write_main_text_with_heraldry(img, params.body, main_text_font, params.undertitle_line_spacing, town_names, end_y_heading)
+    # else:
+    #     write_main_text(img, params.body, main_text_font, end_y_heading, params.undertitle_line_spacing)
+
+    # # --- Edits of the complete image -----------------------------------------
+    # complete_img_transforms = get_complete_img_transforms(params)
+    # for transform in complete_img_transforms:
+    #     img = transform(img)
 
     img.save(os.path.join(os.getcwd(), 'output', 'written.png'))
 
